@@ -1,50 +1,524 @@
-/* Navbar stílusok */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@300;400;500;600&display=swap');
+
+/* --- 1. VÁLTOZÓK ÉS ALAPOK --- */
+:root {
+  --primary: #E67E22;
+  --primary-dark: #D35400;
+  --primary-light: #F39C12;
+  --primary-soft: #FDEBD0;
+  --bg-color: #FFF8F0;
+  --text-main: #2C3E50;
+  --text-light: #64748B; /* Kicsit sötétebb, jobban olvasható szürke */
+  --white: #FFFFFF;
+  --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 10px 30px rgba(230, 126, 34, 0.1);
+  --shadow-lg: 0 20px 40px rgba(230, 126, 34, 0.15);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px; /* Hogy a fix menü ne takarja ki a címet ugráskor */
+}
+
+h1, h2, h3, .price {
+  font-family: 'Nunito', sans-serif;
+}
+
+.divider {
+  width: 60px;
+  height: 4px;
+  background-color: var(--primary);
+  margin: 20px 0 30px 0;
+  border-radius: 2px;
+}
+
+.divider.center {
+  margin: 20px auto 50px auto;
+}
+
+/* --- 2. NAVIGÁCIÓ (Nyakpánt) --- */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 5%;
-  background: white;
-  position: fixed; /* Fixen a tetején marad */
+  padding: 10px 5%; /* Kisebb függőleges padding, hogy a logó domináljon */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-sm);
   z-index: 1000;
+  min-height: 80px; /* Fix minimum magasság */
 }
 
-.logo {
-  font-weight: bold;
-  font-size: 1.5rem;
-  color: #6b8e23;
-}
-
-.nav-links {
+.logo-link {
   display: flex;
-  list-style: none;
-  gap: 20px;
-}
-
-.nav-links a {
+  align-items: center;
+  gap: 12px; /* Ez a távolság a kép és a szöveg között */
+  z-index: 1001;
   text-decoration: none;
-  color: #4a4a4a;
-  font-weight: 500;
-  transition: color 0.3s;
 }
 
-.nav-links a:hover {
-  color: #6b8e23;
+.logo-img {
+  height: 60px; /* Állítsd be a neked tetsző méretre */
+  width: auto;
+  transition: transform 0.3s ease;
 }
 
-/* Szekciók eltolása a fix navbar miatt */
-section {
-  padding: 100px 20px 40px; /* Hogy a navbar ne takarja el a címet */
-  min-height: 400px;
+.logo-link:hover .logo-img {
+  transform: scale(1.05); /* Picit megnő a kép, ha az egész logóra viszed az egeret */
 }
 
-/* Árlista csinosítása */
-.price-card li {
+/* Az új szöveg stílusa a kép mellett */
+.logo-text {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-main); /* Sötétszürke szín */
+  letter-spacing: -0.5px;
+}
+
+/* Kiemelheted a szöveget a narancs színnel is, ha ezt a sort használod:
+  color: var(--primary); 
+*/
+
+@media (min-width: 768px) {
+  .logo-img {
+    height: 80px; 
+  }
+  .logo-text {
+    font-size: 1.8rem; /* Nagyobb képernyőn picit nagyobb betű */
+  }
+}
+
+.logo-img:hover {
+  transform: scale(1.03);
+}
+
+/* Hamburger ikon stílusai */
+.hamburger {
+  display: none;
+  cursor: pointer;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 1001;
+}
+
+.hamburger .bar {
+  width: 28px;
+  height: 3px;
+  background-color: var(--text-main);
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+/* Gombok alapstílusa */
+.nav-btn {
+  text-decoration: none;
+  background-color: var(--primary);
+  color: var(--white);
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(230, 126, 34, 0.2);
+}
+
+.nav-btn:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.mobile-only {
+  display: none;
+}
+
+/* Mobilos nézet beállításai */
+@media (max-width: 991px) {
+  .hamburger {
+    display: flex;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: block;
+    margin-top: 20px;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 75%;
+    max-width: 350px;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 35px;
+    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+    list-style: none;
+  }
+
+  .nav-links.active {
+    right: 0; 
+  }
+
+  .nav-links a {
+    font-size: 1.3rem;
+    color: var(--text-main);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover {
+    color: var(--primary);
+  }
+
+  .hamburger.active .bar:nth-child(1) {
+    transform: translateY(9px) rotate(45deg);
+  }
+  .hamburger.active .bar:nth-child(2) {
+    opacity: 0;
+  }
+  .hamburger.active .bar:nth-child(3) {
+    transform: translateY(-9px) rotate(-45deg);
+  }
+}
+
+/* --- 3. HERO SZEKCIÓ --- */
+.hero {
+  width: 100%;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  text-align: center;
+  padding: 80px 20px 0; /* A top padding a menü miatt kell */
+}
+
+.hero-content {
+  max-width: 850px;
+  z-index: 2;
+  animation: fadeIn 1s ease-out;
+}
+
+.subtitle {
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: block;
+  color: var(--primary-light);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+.hero-content h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin-bottom: 25px;
+  line-height: 1.15;
+  text-shadow: 2px 2px 5px rgba(0,0,0,0.4); /* Jobb olvashatóság képeken */
+}
+
+.hero-content p {
+  font-size: 1.1rem;
+  margin-bottom: 45px;
+  font-weight: 400;
+  line-height: 1.6;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+}
+
+.cta-button {
+  display: inline-block;
+  text-decoration: none;
+  background-color: var(--primary);
+  color: var(--white);
+  padding: 16px 40px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px rgba(230, 126, 34, 0.4);
+}
+
+.cta-button:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(230, 126, 34, 0.5);
+}
+
+/* --- 4. RÓLAM SZEKCIÓ --- */
+.about-section {
+  padding: 100px 5%; /* Megnövelt térköz a légiesebb designért */
+  background-color: var(--white);
+  text-align: center;
+}
+
+.about-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.about-content h2 {
+  font-size: 2.5rem;
+  color: var(--text-main);
+}
+
+.about-content p {
+  color: var(--text-light);
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+/* --- 5. SZOLGÁLTATÁSOK --- */
+.services {
+  padding: 100px 5%;
+  text-align: center;
+  background: linear-gradient(180deg, var(--bg-color) 0%, #FFF5E6 100%);
+}
+
+.services h2 {
+  font-size: 2.5rem;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 35px;
+  max-width: 1200px;
+  margin: 60px auto 0;
+}
+
+.service-card {
+  background-color: var(--white);
+  padding: 45px 35px;
+  border-radius: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-align: left;
+  position: relative;
+  border: 1px solid rgba(230, 126, 34, 0.05);
+}
+
+.service-card:hover {
+  transform: translateY(-12px);
+  box-shadow: var(--shadow-lg);
+}
+
+.service-card.popular {
+  border: 2px solid var(--primary);
+}
+
+.badge {
+  position: absolute;
+  top: -16px;
+  right: 30px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: var(--white);
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 0 4px 10px rgba(230, 126, 34, 0.3);
+}
+
+.icon {
+  font-size: 3rem;
+  margin-bottom: 25px;
+}
+
+.service-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+.description {
+  color: var(--text-light);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 35px;
+  min-height: 70px;
+}
+
+.card-footer {
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px dashed #ccc;
+  align-items: center;
+  border-top: 1px solid #EDF2F7;
+  padding-top: 25px;
+}
+
+.duration {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.price {
+  font-size: 1.5rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* --- 6. KAPCSOLAT --- */
+.contact {
+  background: linear-gradient(135deg, var(--text-main) 0%, #1A252F 100%);
+  color: var(--white);
+  padding: 100px 5% 30px;
+  border-top: 5px solid var(--primary);
+}
+
+.contact-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 50px;
+  max-width: 1200px;
+  margin: 0 auto 80px auto;
+}
+
+.contact-info, .opening-hours {
+  flex: 1;
+  min-width: 300px;
+}
+
+.contact-info h2 {
+  font-size: 2.5rem;
+  margin-bottom: 25px;
+}
+
+.contact-info p {
+  color: #CBD5E1;
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.info-items p {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  color: var(--white);
+}
+
+.info-items span {
+  font-size: 1.4rem;
+}
+
+.opening-hours {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.opening-hours h3 {
+  font-size: 1.8rem;
+  margin-bottom: 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 15px;
+}
+
+.opening-hours ul {
+  list-style: none;
+}
+
+.opening-hours li {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  color: #E2E8F0;
+  font-size: 1.1rem;
+}
+
+.opening-hours span {
+  color: var(--primary-light);
+  font-weight: 500;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 25px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94A3B8;
+  font-size: 0.95rem;
+}
+
+/* --- 7. RESZPONZÍV --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (min-width: 768px) {
+  .logo-img {
+    height: 75px; /* Asztalon optimális méret egy letisztult menühöz */
+  }
+  .nav-links {
+    display: flex;
+    align-items: center; /* Függőlegesen középre igazítja a linkeket */
+    gap: 35px;
+    list-style: none;
+  }
+  .nav-links a {
+    text-decoration: none;
+    color: var(--text-main);
+    font-weight: 500;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+  }
+  .nav-links a:hover {
+    color: var(--primary);
+  }
+  .hero-content h1 {
+    font-size: 3.8rem;
+  }
+  .hero-content p {
+    font-size: 1.25rem;
+  }
+  .services-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-content h1 {
+    font-size: 4.5rem;
+  }
 }
