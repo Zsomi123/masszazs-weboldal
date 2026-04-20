@@ -1,7 +1,7 @@
 // backend/routes/api.js
 const express = require('express');
 const router = express.Router();
-const db = require('../db'); // Beimportáljuk az adatbázist a db.js-ből!
+const db = require('./db'); // Beimportáljuk az adatbázist a db.js-ből!
 
 // 1. Szolgáltatások lekérése
 // (Figyeld meg: már nem '/api/services', csak '/services', mert a 'server.js'-ben megadjuk a fix /api előtagot!)

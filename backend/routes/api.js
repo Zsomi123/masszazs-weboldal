@@ -1,6 +1,6 @@
 // backend/routes/api.js
 const express = require('express');
-const router = express.Router();
+const bcrypt = require('bcrypt');
 const db = require('../db'); // Beimportáljuk az adatbázist a db.js-ből!
 
 // 1. Szolgáltatások lekérése
@@ -95,6 +95,36 @@ router.get('/admin/appointments', (req, res) => {
             return res.status(500).send(err);
         }
         res.json(results);
+    });
+});
+
+// ÚJ VÉGPONT: Bejelentkezés ellenőrzése
+router.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    // 1. Kikeressük, van-e egyáltalán ilyen nevű felhasználó
+    db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
+        if (err) return res.status(500).send(err);
+        
+        // Ha üres a lista, nincs ilyen user
+        if (results.length === 0) {
+            return res.status(401).json({ success: false, message: "Hibás felhasználónév vagy jelszó!" });
+        }
+
+        const user = results[0];
+
+        // 2. Megvan a user! Most összehasonlítjuk a beírt jelszót a darálttal (hash)
+        bcrypt.compare(password, user.password_hash, (err, isMatch) => {
+            if (err) return res.status(500).send(err);
+            
+            if (isMatch) {
+                // SIKERES BELÉPÉS!
+                res.json({ success: true, message: "Sikeres bejelentkezés!" });
+            } else {
+                // ROSSZ JELSZÓ!
+                res.status(401).json({ success: false, message: "Hibás felhasználónév vagy jelszó!" });
+            }
+        });
     });
 });
 
