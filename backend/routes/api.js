@@ -72,4 +72,30 @@ router.post('/appointments', (req, res) => {
     });
 });
 
+// ÚJ VÉGPONT: Az összes foglalás lekérése az Admin felülethez
+router.get('/admin/appointments', (req, res) => {
+    // Összekapcsoljuk a foglalásokat a szolgáltatásokkal, hogy lássuk a masszázs nevét is
+    const query = `
+        SELECT 
+            appointments.id, 
+            appointments.customer_name, 
+            appointments.customer_phone, 
+            appointments.start_time, 
+            appointments.end_time,
+            services.name AS service_name,
+            services.price
+        FROM appointments
+        JOIN services ON appointments.service_id = services.id
+        ORDER BY appointments.start_time ASC
+    `;
+    
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Hiba az admin lekérdezésnél:", err);
+            return res.status(500).send(err);
+        }
+        res.json(results);
+    });
+});
+
 module.exports = router;
