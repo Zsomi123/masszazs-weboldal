@@ -13,9 +13,16 @@ router.get('/services', (req, res) => {
 });
 
 // 2. FOGLALÁS (Okos ütközésvizsgálattal!)
-// Keresd meg ezt a végpontot (lehet, hogy nálad router.post('/appointments', ...) néven fut, ha a szerver.js-ben van beállítva az /api)
 router.post('/appointments', (req, res) => { 
     const { service_id, customer_name, customer_phone, start_time } = req.body;
+
+    // --- ÚJ RÉSZ: Hétvége ellenőrzése a szerveren ---
+    const dateObj = new Date(start_time);
+    const dayOfWeek = dateObj.getDay(); // A JavaScriptben 0 a Vasárnap, 6 a Szombat
+    
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        return res.status(400).json({ message: "Sajnos hétvégén zárva vagyunk! Kérjük, válassz hétköznapi időpontot." });
+    }
 
     // 1. Lekérjük a szolgáltatás hosszát percben
     db.query('SELECT duration FROM services WHERE id = ?', [service_id], (err, serviceResults) => {
@@ -78,12 +85,25 @@ db.query(insertSql, [service_id, customer_name, customer_phone, start_time, star
     });
 });
 
-// 3. ADMIN: A napi szabad/foglalt időpontok a React Naptárhoz
+// 3. A napi foglalt/blokkolt időpontok lekérése a naptárhoz
 router.get('/appointments/:date', (req, res) => {
     const searchDate = req.params.date;
-    const query = `SELECT start_time, end_time FROM appointments WHERE DATE(start_time) = ?`;
-    db.query(query, [searchDate], (err, results) => {
-        if (err) return res.status(500).send(err);
+
+    // A UNION segítségével egyetlen listába gyúrjuk a foglalásokat ÉS a blokkolásokat
+    // Így a frontend egyetlen "foglalt lista" alapján tud dolgozni
+    const query = `
+        SELECT start_time, end_time FROM appointments WHERE DATE(start_time) = ?
+        UNION
+        SELECT start_time, end_time FROM blocks WHERE DATE(start_time) = ?
+    `;
+
+    db.query(query, [searchDate, searchDate], (err, results) => {
+        if (err) {
+            console.error("Hiba a napi adatok lekérésekor:", err);
+            return res.status(500).send(err);
+        }
+        
+        // A results most már tartalmazza az összes vendég-időpontot és admin-kihúzást is
         res.json(results);
     });
 });

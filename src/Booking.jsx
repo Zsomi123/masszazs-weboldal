@@ -172,11 +172,14 @@ function Booking() {
           <h2>2. Dátum és Időpont</h2>
           
           {/* Maga a Naptár */}
+          {/* Maga a Naptár */}
           <div style={{ boxShadow: '0 4px 15px rgba(0,0,0,0.1)', borderRadius: '10px', overflow: 'hidden', marginBottom: '20px' }}>
             <Calendar 
               onChange={setSelectedDate} 
               value={selectedDate} 
               minDate={new Date()} // Nem lehet a múltba foglalni!
+              // --- ÚJ SOR: Hétvégék (Szombat és Vasárnap) szürkítése és tiltása ---
+              tileDisabled={({ date }) => date.getDay() === 0 || date.getDay() === 6} 
             />
           </div>
 
