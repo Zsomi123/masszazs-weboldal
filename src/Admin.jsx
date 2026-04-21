@@ -6,133 +6,148 @@ import logoImg from './assets/logo.png';
 
 function Admin() {
   const [appointments, setAppointments] = useState([]);
+  const [services, setServices] = useState([]); // ÚJ: Szolgáltatások listája
   
-  // Állapotok a belépéshez
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  // --- ÚJ ÁLLAPOTOK A SZERKESZTÉSHEZ ---
-  const [editId, setEditId] = useState(null); // Melyik sor ID-ját szerkesztjük épp?
+
+  // --- ÁLLAPOTOK A FOGLALÁSOK SZERKESZTÉSÉHEZ ---
+  const [editId, setEditId] = useState(null);
   const [editFormData, setEditFormData] = useState({ customer_name: '', customer_phone: '' });
 
-  // Amikor rákattintunk a "Szerkesztés" gombra
+  // --- ÚJ: ÁLLAPOTOK A SZOLGÁLTATÁSOK KEZELÉSÉHEZ ---
+  const [newService, setNewService] = useState({ name: '', duration: '', price: '' });
+  const [editServiceId, setEditServiceId] = useState(null);
+  const [editServiceData, setEditServiceData] = useState({ name: '', duration: '', price: '' });
+
+  // Adatok letöltése belépés után (Foglalások ÉS Szolgáltatások)
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetch('http://localhost:5001/api/admin/appointments')
+        .then(res => res.json())
+        .then(data => setAppointments(data));
+        
+      fetch('http://localhost:5001/api/services') // A weboldal is ezt használja!
+        .then(res => res.json())
+        .then(data => setServices(data));
+    }
+  }, [isLoggedIn]);
+
+  // --- BEJELENTKEZÉS LÓGIKA ---
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    fetch('http://localhost:5001/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    }).then(res => res.json()).then(data => {
+      if (data.success) setIsLoggedIn(true);
+      else setErrorMsg(data.message);
+    }).catch(() => setErrorMsg('Hiba a szerver kapcsolatban.'));
+  };
+
+  // ==========================================
+  // FOGLALÁSOK KEZELÉSE (A korábbi kód)
+  // ==========================================
+  const handleDelete = (id) => {
+    if (window.confirm("Biztosan törölni szeretnéd ezt a foglalást?")) {
+      fetch(`http://localhost:5001/api/admin/appointments/${id}`, { method: 'DELETE' })
+      .then(res => res.json()).then(data => {
+        if (data.success) setAppointments(appointments.filter(appt => appt.id !== id));
+      });
+    }
+  };
+
   const handleEditClick = (appt) => {
     setEditId(appt.id);
     setEditFormData({ customer_name: appt.customer_name, customer_phone: appt.customer_phone });
   };
 
-  // Amikor rákattintunk a "Mentés" gombra
   const handleSave = (id) => {
     fetch(`http://localhost:5001/api/admin/appointments/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editFormData)
-    })
-    .then(res => res.json())
-    .then(data => {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editFormData)
+    }).then(res => res.json()).then(data => {
       if (data.success) {
-        // Kicseréljük a régi adatokat az újakra a képernyőn
-        setAppointments(appointments.map(appt => 
-          appt.id === id ? { ...appt, customer_name: editFormData.customer_name, customer_phone: editFormData.customer_phone } : appt
-        ));
-        setEditId(null); // Kilépünk a szerkesztő módból
+        setAppointments(appointments.map(appt => appt.id === id ? { ...appt, ...editFormData } : appt));
+        setEditId(null);
       }
-    })
-    .catch(err => console.error("Hiba a mentéskor:", err));
+    });
   };
 
-  // Csak akkor töltjük le a titkos adatokat, ha már beléptünk!
-  useEffect(() => {
-    if (isLoggedIn) {
-      fetch('http://localhost:5001/api/admin/appointments')
-        .then(res => res.json())
-        .then(data => setAppointments(data))
-        .catch(err => console.error("Hiba az adatok letöltésekor:", err));
-    }
-  }, [isLoggedIn]);
-
-  // Belépés gomb megnyomása
-  const handleLogin = (e) => {
+  // ==========================================
+  // ÚJ: SZOLGÁLTATÁSOK KEZELÉSE 
+  // ==========================================
+  
+  // 1. Új szolgáltatás hozzáadása
+  const handleAddService = (e) => {
     e.preventDefault();
-    setErrorMsg('');
-
-    fetch('http://localhost:5001/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    })
-    .then(res => res.json())
-    .then(data => {
+    fetch('http://localhost:5001/api/admin/services', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newService)
+    }).then(res => res.json()).then(data => {
       if (data.success) {
-        setIsLoggedIn(true); // Siker! Kinyitjuk az oldalt.
-      } else {
-        setErrorMsg(data.message); // Hibaüzenet (pl. Rossz jelszó)
+        alert("Sikeresen hozzáadva!");
+        setNewService({ name: '', duration: '', price: '' });
+        // Újratöltjük a listát a szerverről
+        fetch('http://localhost:5001/api/services').then(res => res.json()).then(data => setServices(data));
       }
-    })
-    .catch(err => setErrorMsg('Hiba a szerver kapcsolatban.'));
+    });
   };
 
-  // Foglalás törlése
-  const handleDelete = (id) => {
-    // Biztonsági kérdés, hogy ne legyen véletlen kattintás
-    if (window.confirm("Biztosan törölni szeretnéd ezt a foglalást?")) {
-      fetch(`http://localhost:5001/api/admin/appointments/${id}`, {
-        method: 'DELETE',
-      })
-      .then(res => res.json())
-      .then(data => {
+  // 2. Szolgáltatás törlése
+  const handleDeleteService = (id) => {
+    if (window.confirm("Biztosan törlöd ezt a szolgáltatást?")) {
+      fetch(`http://localhost:5001/api/admin/services/${id}`, { method: 'DELETE' })
+      .then(res => res.json()).then(data => {
         if (data.success) {
-          // Frissítjük a listát a képernyőn: kiszűrjük azt, amit most töröltünk
-          setAppointments(appointments.filter(appt => appt.id !== id));
+          setServices(services.filter(s => s.id !== id));
+        } else {
+          alert(data.message); // Kiírjuk, ha nem lehet törölni a foglalások miatt!
         }
-      })
-      .catch(err => console.error("Hiba törlés közben:", err));
+      });
     }
   };
 
-  // 1. KÉPERNYŐ: BEJELENTKEZŐ FORM (Ha még nincs belépve)
+  // 3. Szolgáltatás szerkesztése
+  const handleEditServiceClick = (service) => {
+    setEditServiceId(service.id);
+    setEditServiceData({ name: service.name, duration: service.duration, price: service.price });
+  };
+
+  const handleSaveService = (id) => {
+    fetch(`http://localhost:5001/api/admin/services/${id}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editServiceData)
+    }).then(res => res.json()).then(data => {
+      if (data.success) {
+        setServices(services.map(s => s.id === id ? { ...s, ...editServiceData } : s));
+        setEditServiceId(null);
+      }
+    });
+  };
+
+  // --- KÉPERNYŐK ---
   if (!isLoggedIn) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f4f6f8' }}>
-        <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <img src={logoImg} alt="Logo" style={{ height: '60px', borderRadius: '5px' }} />
-            <h2 style={{ marginTop: '10px', color: '#2c3e50' }}>Admin Belépés</h2>
-          </div>
-          
-          {errorMsg && <div style={{ color: 'red', marginBottom: '15px', textAlign: 'center', fontWeight: 'bold' }}>❌ {errorMsg}</div>}
-
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            <input 
-              type="text" 
-              placeholder="Felhasználónév" 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)} 
-              style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}
-              required 
-            />
-            <input 
-              type="password" 
-              placeholder="Jelszó" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}
-              required 
-            />
-            <button type="submit" style={{ padding: '12px', backgroundColor: '#E67E22', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
-              Belépés a Főnöki Pultba
-            </button>
-          </form>
-          <div style={{ textAlign: 'center', marginTop: '15px' }}>
-             <Link to="/" style={{ color: '#7f8c8d', textDecoration: 'none', fontSize: '0.9rem' }}>← Vissza a weboldalra</Link>
+        <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f4f6f8' }}>
+          <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <img src={logoImg} alt="Logo" style={{ height: '60px', borderRadius: '5px' }} />
+              <h2 style={{ marginTop: '10px', color: '#2c3e50' }}>Admin Belépés</h2>
+            </div>
+            {errorMsg && <div style={{ color: 'red', marginBottom: '15px', textAlign: 'center', fontWeight: 'bold' }}>❌ {errorMsg}</div>}
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <input type="text" placeholder="Felhasználónév" value={username} onChange={(e) => setUsername(e.target.value)} style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }} required />
+              <input type="password" placeholder="Jelszó" value={password} onChange={(e) => setPassword(e.target.value)} style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }} required />
+              <button type="submit" style={{ padding: '12px', backgroundColor: '#E67E22', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Belépés a Főnöki Pultba</button>
+            </form>
+            <div style={{ textAlign: 'center', marginTop: '15px' }}><Link to="/" style={{ color: '#7f8c8d', textDecoration: 'none', fontSize: '0.9rem' }}>← Vissza a weboldalra</Link></div>
           </div>
         </div>
-      </div>
-    );
+      );
   }
 
-  // 2. KÉPERNYŐ: A TITKOS TÁBLÁZAT (Ha már belépett)
   return (
     <div className="admin-page" style={{ backgroundColor: '#f4f6f8', minHeight: '100vh', paddingBottom: '50px' }}>
       <nav className="navbar" style={{ position: 'relative' }}>
@@ -144,84 +159,103 @@ function Admin() {
       </nav>
 
       <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px' }}>
-        <h1 style={{ marginBottom: '30px', color: '#2c3e50' }}>🗓️ Közelgő Foglalások</h1>
+        
+        {/* 1. SZEKCIÓ: FOGLALÁSOK (Régi rész) */}
+        <h1 style={{ marginBottom: '20px', color: '#2c3e50' }}>🗓️ Közelgő Foglalások</h1>
+        <div style={{ backgroundColor: 'white', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', overflow: 'hidden', marginBottom: '50px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#2c3e50', color: 'white' }}>
+                <th style={{ padding: '15px 20px' }}>Dátum és Időpont</th>
+                <th style={{ padding: '15px 20px' }}>Vendég neve</th>
+                <th style={{ padding: '15px 20px' }}>Telefonszám</th>
+                <th style={{ padding: '15px 20px' }}>Szolgáltatás</th>
+                <th style={{ padding: '15px 20px', textAlign: 'center' }}>Műveletek</th>
+              </tr>
+            </thead>
+            <tbody>
+              {appointments.length === 0 ? (
+                <tr><td colSpan="5" style={{ padding: '30px', textAlign: 'center' }}>Jelenleg nincs foglalásod.</td></tr>
+              ) : (
+                appointments.map((appt) => (
+                  <tr key={appt.id} style={{ borderBottom: '1px solid #eee', backgroundColor: editId === appt.id ? '#fdf8e3' : 'transparent' }}>
+                    <td style={{ padding: '15px 20px', fontWeight: 'bold', color: '#E67E22' }}>{format(new Date(appt.start_time), 'yyyy. MM. dd. - HH:mm')}</td>
+                    <td style={{ padding: '15px 20px' }}>
+                      {editId === appt.id ? <input type="text" value={editFormData.customer_name} onChange={(e) => setEditFormData({...editFormData, customer_name: e.target.value})} style={{ padding: '8px', width: '100%' }} /> : <span style={{ fontWeight: 'bold' }}>{appt.customer_name}</span>}
+                    </td>
+                    <td style={{ padding: '15px 20px' }}>
+                      {editId === appt.id ? <input type="text" value={editFormData.customer_phone} onChange={(e) => setEditFormData({...editFormData, customer_phone: e.target.value})} style={{ padding: '8px', width: '100%' }} /> : appt.customer_phone}
+                    </td>
+                    <td style={{ padding: '15px 20px' }}>{appt.service_name}</td>
+                    <td style={{ padding: '15px 20px', textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      {editId === appt.id ? (
+                        <><button onClick={() => handleSave(appt.id)} style={{ backgroundColor: '#2ecc71', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Mentés</button><button onClick={() => setEditId(null)} style={{ backgroundColor: '#95a5a6', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Mégse</button></>
+                      ) : (
+                        <><button onClick={() => handleEditClick(appt)} style={{ backgroundColor: '#f39c12', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Szerkeszt</button><button onClick={() => handleDelete(appt.id)} style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Törlés</button></>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* 2. SZEKCIÓ: SZOLGÁLTATÁSOK KEZELÉSE (Új rész) */}
+        <h1 style={{ marginBottom: '20px', color: '#2c3e50', borderTop: '2px solid #ccc', paddingTop: '30px' }}>💆‍♀️ Szolgáltatások és Árlista</h1>
+        
+        {/* Új Hozzáadása Form */}
+        <form onSubmit={handleAddService} style={{ display: 'flex', gap: '15px', marginBottom: '20px', backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+            <input type="text" placeholder="Masszázs neve (pl. Lávaköves)" value={newService.name} onChange={e => setNewService({...newService, name: e.target.value})} required style={{flex: 2, padding: '10px', border: '1px solid #ccc', borderRadius: '5px'}} />
+            <input type="number" placeholder="Perc (pl. 60)" value={newService.duration} onChange={e => setNewService({...newService, duration: e.target.value})} required style={{flex: 1, padding: '10px', border: '1px solid #ccc', borderRadius: '5px'}} />
+            <input type="number" placeholder="Ár (pl. 15000)" value={newService.price} onChange={e => setNewService({...newService, price: e.target.value})} required style={{flex: 1, padding: '10px', border: '1px solid #ccc', borderRadius: '5px'}} />
+            <button type="submit" style={{ backgroundColor: '#27ae60', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>+ Új hozzáadása</button>
+        </form>
+
+        {/* Szolgáltatások Táblázata */}
         <div style={{ backgroundColor: 'white', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-  <thead>
-    <tr style={{ backgroundColor: '#2c3e50', color: 'white' }}>
-      <th style={{ padding: '15px 20px' }}>Dátum és Időpont</th>
-      <th style={{ padding: '15px 20px' }}>Vendég neve</th>
-      <th style={{ padding: '15px 20px' }}>Telefonszám</th>
-      <th style={{ padding: '15px 20px' }}>Szolgáltatás</th>
-      <th style={{ padding: '15px 20px', textAlign: 'center' }}>Műveletek</th>
-    </tr>
-  </thead>
-  <tbody>
-  {appointments.length === 0 ? (
-    <tr><td colSpan="5" style={{ padding: '30px', textAlign: 'center' }}>Jelenleg nincs foglalásod.</td></tr>
-  ) : (
-    appointments.map((appt) => (
-      <tr key={appt.id} style={{ borderBottom: '1px solid #eee', backgroundColor: editId === appt.id ? '#fdf8e3' : 'transparent' }}>
-        
-        {/* 1. DÁTUM (Nem szerkeszthető) */}
-        <td style={{ padding: '15px 20px', fontWeight: 'bold', color: '#E67E22' }}>
-          {format(new Date(appt.start_time), 'yyyy. MM. dd. - HH:mm')}
-        </td>
+            <thead>
+              <tr style={{ backgroundColor: '#34495e', color: 'white' }}>
+                <th style={{ padding: '15px 20px' }}>Név</th>
+                <th style={{ padding: '15px 20px' }}>Időtartam (perc)</th>
+                <th style={{ padding: '15px 20px' }}>Ár (Ft)</th>
+                <th style={{ padding: '15px 20px', textAlign: 'center' }}>Műveletek</th>
+              </tr>
+            </thead>
+            <tbody>
+              {services.map((s) => (
+                <tr key={s.id} style={{ borderBottom: '1px solid #eee', backgroundColor: editServiceId === s.id ? '#fdf8e3' : 'transparent' }}>
+                  
+                  {/* NÉV */}
+                  <td style={{ padding: '15px 20px', fontWeight: 'bold' }}>
+                    {editServiceId === s.id ? <input type="text" value={editServiceData.name} onChange={e => setEditServiceData({...editServiceData, name: e.target.value})} style={{ padding: '8px', width: '100%' }} /> : s.name}
+                  </td>
+                  
+                  {/* IDŐTARTAM */}
+                  <td style={{ padding: '15px 20px' }}>
+                     {editServiceId === s.id ? <input type="number" value={editServiceData.duration} onChange={e => setEditServiceData({...editServiceData, duration: e.target.value})} style={{ padding: '8px', width: '100%' }} /> : `${s.duration} perc`}
+                  </td>
 
-        {/* 2. NÉV (Szerkeszthető) */}
-        <td style={{ padding: '15px 20px' }}>
-          {editId === appt.id ? (
-            <input 
-              type="text" 
-              value={editFormData.customer_name} 
-              onChange={(e) => setEditFormData({...editFormData, customer_name: e.target.value})}
-              style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
-          ) : (
-            <span style={{ fontWeight: 'bold' }}>{appt.customer_name}</span>
-          )}
-        </td>
+                  {/* ÁR */}
+                  <td style={{ padding: '15px 20px', color: '#27ae60', fontWeight: 'bold' }}>
+                     {editServiceId === s.id ? <input type="number" value={editServiceData.price} onChange={e => setEditServiceData({...editServiceData, price: e.target.value})} style={{ padding: '8px', width: '100%' }} /> : `${s.price} Ft`}
+                  </td>
 
-        {/* 3. TELEFON (Szerkeszthető) */}
-        <td style={{ padding: '15px 20px' }}>
-          {editId === appt.id ? (
-             <input 
-              type="text" 
-              value={editFormData.customer_phone} 
-              onChange={(e) => setEditFormData({...editFormData, customer_phone: e.target.value})}
-              style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
-          ) : (
-             appt.customer_phone
-          )}
-        </td>
-
-        {/* 4. SZOLGÁLTATÁS (Nem szerkeszthető) */}
-        <td style={{ padding: '15px 20px' }}>{appt.service_name}</td>
-
-        {/* 5. GOMBOK */}
-        <td style={{ padding: '15px 20px', textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
-          {editId === appt.id ? (
-             <>
-               {/* Ha szerkesztés módban vagyunk: Mentés és Mégse gombok */}
-               <button onClick={() => handleSave(appt.id)} style={{ backgroundColor: '#2ecc71', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Mentés</button>
-               <button onClick={() => setEditId(null)} style={{ backgroundColor: '#95a5a6', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Mégse</button>
-             </>
-          ) : (
-             <>
-               {/* Alapállapot: Szerkesztés és Törlés gombok */}
-               <button onClick={() => handleEditClick(appt)} style={{ backgroundColor: '#f39c12', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Szerkeszt</button>
-               <button onClick={() => handleDelete(appt.id)} style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Törlés</button>
-             </>
-          )}
-        </td>
-
-      </tr>
-    ))
-  )}
-</tbody>
-</table>
+                  {/* GOMBOK */}
+                  <td style={{ padding: '15px 20px', textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                     {editServiceId === s.id ? (
+                        <><button onClick={() => handleSaveService(s.id)} style={{ backgroundColor: '#2ecc71', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Mentés</button><button onClick={() => setEditServiceId(null)} style={{ backgroundColor: '#95a5a6', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Mégse</button></>
+                      ) : (
+                        <><button onClick={() => handleEditServiceClick(s)} style={{ backgroundColor: '#f39c12', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Szerkeszt</button><button onClick={() => handleDeleteService(s.id)} style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Törlés</button></>
+                      )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+
       </div>
     </div>
   );
