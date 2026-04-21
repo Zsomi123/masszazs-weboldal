@@ -12,6 +12,35 @@ function Admin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  // --- ÚJ ÁLLAPOTOK A SZERKESZTÉSHEZ ---
+  const [editId, setEditId] = useState(null); // Melyik sor ID-ját szerkesztjük épp?
+  const [editFormData, setEditFormData] = useState({ customer_name: '', customer_phone: '' });
+
+  // Amikor rákattintunk a "Szerkesztés" gombra
+  const handleEditClick = (appt) => {
+    setEditId(appt.id);
+    setEditFormData({ customer_name: appt.customer_name, customer_phone: appt.customer_phone });
+  };
+
+  // Amikor rákattintunk a "Mentés" gombra
+  const handleSave = (id) => {
+    fetch(`http://localhost:5001/api/admin/appointments/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editFormData)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // Kicseréljük a régi adatokat az újakra a képernyőn
+        setAppointments(appointments.map(appt => 
+          appt.id === id ? { ...appt, customer_name: editFormData.customer_name, customer_phone: editFormData.customer_phone } : appt
+        ));
+        setEditId(null); // Kilépünk a szerkesztő módból
+      }
+    })
+    .catch(err => console.error("Hiba a mentéskor:", err));
+  };
 
   // Csak akkor töltjük le a titkos adatokat, ha már beléptünk!
   useEffect(() => {
@@ -42,6 +71,24 @@ function Admin() {
       }
     })
     .catch(err => setErrorMsg('Hiba a szerver kapcsolatban.'));
+  };
+
+  // Foglalás törlése
+  const handleDelete = (id) => {
+    // Biztonsági kérdés, hogy ne legyen véletlen kattintás
+    if (window.confirm("Biztosan törölni szeretnéd ezt a foglalást?")) {
+      fetch(`http://localhost:5001/api/admin/appointments/${id}`, {
+        method: 'DELETE',
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // Frissítjük a listát a képernyőn: kiszűrjük azt, amit most töröltünk
+          setAppointments(appointments.filter(appt => appt.id !== id));
+        }
+      })
+      .catch(err => console.error("Hiba törlés közben:", err));
+    }
   };
 
   // 1. KÉPERNYŐ: BEJELENTKEZŐ FORM (Ha még nincs belépve)
@@ -100,31 +147,80 @@ function Admin() {
         <h1 style={{ marginBottom: '30px', color: '#2c3e50' }}>🗓️ Közelgő Foglalások</h1>
         <div style={{ backgroundColor: 'white', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#2c3e50', color: 'white' }}>
-                <th style={{ padding: '15px 20px' }}>Dátum és Időpont</th>
-                <th style={{ padding: '15px 20px' }}>Vendég neve</th>
-                <th style={{ padding: '15px 20px' }}>Telefonszám</th>
-                <th style={{ padding: '15px 20px' }}>Szolgáltatás</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments.length === 0 ? (
-                <tr><td colSpan="4" style={{ padding: '30px', textAlign: 'center' }}>Jelenleg nincs foglalásod.</td></tr>
-              ) : (
-                appointments.map((appt) => (
-                  <tr key={appt.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '15px 20px', fontWeight: 'bold', color: '#E67E22' }}>
-                      {format(new Date(appt.start_time), 'yyyy. MM. dd. - HH:mm')}
-                    </td>
-                    <td style={{ padding: '15px 20px', fontWeight: 'bold' }}>{appt.customer_name}</td>
-                    <td style={{ padding: '15px 20px' }}>{appt.customer_phone}</td>
-                    <td style={{ padding: '15px 20px' }}>{appt.service_name}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+  <thead>
+    <tr style={{ backgroundColor: '#2c3e50', color: 'white' }}>
+      <th style={{ padding: '15px 20px' }}>Dátum és Időpont</th>
+      <th style={{ padding: '15px 20px' }}>Vendég neve</th>
+      <th style={{ padding: '15px 20px' }}>Telefonszám</th>
+      <th style={{ padding: '15px 20px' }}>Szolgáltatás</th>
+      <th style={{ padding: '15px 20px', textAlign: 'center' }}>Műveletek</th>
+    </tr>
+  </thead>
+  <tbody>
+  {appointments.length === 0 ? (
+    <tr><td colSpan="5" style={{ padding: '30px', textAlign: 'center' }}>Jelenleg nincs foglalásod.</td></tr>
+  ) : (
+    appointments.map((appt) => (
+      <tr key={appt.id} style={{ borderBottom: '1px solid #eee', backgroundColor: editId === appt.id ? '#fdf8e3' : 'transparent' }}>
+        
+        {/* 1. DÁTUM (Nem szerkeszthető) */}
+        <td style={{ padding: '15px 20px', fontWeight: 'bold', color: '#E67E22' }}>
+          {format(new Date(appt.start_time), 'yyyy. MM. dd. - HH:mm')}
+        </td>
+
+        {/* 2. NÉV (Szerkeszthető) */}
+        <td style={{ padding: '15px 20px' }}>
+          {editId === appt.id ? (
+            <input 
+              type="text" 
+              value={editFormData.customer_name} 
+              onChange={(e) => setEditFormData({...editFormData, customer_name: e.target.value})}
+              style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid #ccc' }}
+            />
+          ) : (
+            <span style={{ fontWeight: 'bold' }}>{appt.customer_name}</span>
+          )}
+        </td>
+
+        {/* 3. TELEFON (Szerkeszthető) */}
+        <td style={{ padding: '15px 20px' }}>
+          {editId === appt.id ? (
+             <input 
+              type="text" 
+              value={editFormData.customer_phone} 
+              onChange={(e) => setEditFormData({...editFormData, customer_phone: e.target.value})}
+              style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid #ccc' }}
+            />
+          ) : (
+             appt.customer_phone
+          )}
+        </td>
+
+        {/* 4. SZOLGÁLTATÁS (Nem szerkeszthető) */}
+        <td style={{ padding: '15px 20px' }}>{appt.service_name}</td>
+
+        {/* 5. GOMBOK */}
+        <td style={{ padding: '15px 20px', textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+          {editId === appt.id ? (
+             <>
+               {/* Ha szerkesztés módban vagyunk: Mentés és Mégse gombok */}
+               <button onClick={() => handleSave(appt.id)} style={{ backgroundColor: '#2ecc71', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Mentés</button>
+               <button onClick={() => setEditId(null)} style={{ backgroundColor: '#95a5a6', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Mégse</button>
+             </>
+          ) : (
+             <>
+               {/* Alapállapot: Szerkesztés és Törlés gombok */}
+               <button onClick={() => handleEditClick(appt)} style={{ backgroundColor: '#f39c12', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Szerkeszt</button>
+               <button onClick={() => handleDelete(appt.id)} style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Törlés</button>
+             </>
+          )}
+        </td>
+
+      </tr>
+    ))
+  )}
+</tbody>
+</table>
         </div>
       </div>
     </div>

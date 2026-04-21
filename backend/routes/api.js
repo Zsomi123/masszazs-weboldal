@@ -82,4 +82,35 @@ router.post('/login', (req, res) => {
     });
 });
 
+// 6. ADMIN: Foglalás törlése ID alapján
+router.delete('/admin/appointments/:id', (req, res) => {
+    const id = req.params.id;
+
+    const query = "DELETE FROM appointments WHERE id = ?";
+    
+    db.query(query, [id], (err, result) => {
+        if (err) {
+            console.error("Hiba a törlésnél:", err);
+            return res.status(500).send(err);
+        }
+        res.json({ success: true, message: "Foglalás sikeresen törölve!" });
+    });
+});
+
+// 7. ADMIN: Foglalás szerkesztése (Név és Telefonszám)
+router.put('/admin/appointments/:id', (req, res) => {
+    const id = req.params.id;
+    const { customer_name, customer_phone } = req.body;
+
+    const query = "UPDATE appointments SET customer_name = ?, customer_phone = ? WHERE id = ?";
+    
+    db.query(query, [customer_name, customer_phone, id], (err, result) => {
+        if (err) {
+            console.error("Hiba a frissítésnél:", err);
+            return res.status(500).send(err);
+        }
+        res.json({ success: true, message: "Sikeresen frissítve!" });
+    });
+});
+
 module.exports = router;
