@@ -13,29 +13,66 @@ router.get('/services', (req, res) => {
 });
 
 // 2. FOGLALÁS (Okos ütközésvizsgálattal!)
-router.post('/appointments', (req, res) => {
+// Keresd meg ezt a végpontot (lehet, hogy nálad router.post('/appointments', ...) néven fut, ha a szerver.js-ben van beállítva az /api)
+router.post('/appointments', (req, res) => { 
     const { service_id, customer_name, customer_phone, start_time } = req.body;
 
-    db.query('SELECT duration FROM services WHERE id = ?', [service_id], (err, serviceResult) => {
-        if (err) return res.status(500).send(err);
-        
-        const duration = serviceResult[0].duration;
-        const startDate = new Date(start_time);
-        const endDate = new Date(startDate.getTime() + duration * 60000);
+    // 1. Lekérjük a szolgáltatás hosszát percben
+    db.query('SELECT duration FROM services WHERE id = ?', [service_id], (err, serviceResults) => {
+        if (err || serviceResults.length === 0) {
+            return res.status(500).json({ message: "Hiba a szolgáltatás lekérésekor." });
+        }
 
-        // Ütközésvizsgálat
-        const overlapQuery = `SELECT * FROM appointments WHERE (start_time < ?) AND (end_time > ?)`;
-        db.query(overlapQuery, [endDate, startDate], (err, overlaps) => {
-            if (err) return res.status(500).send(err);
-            if (overlaps.length > 0) {
-                return res.status(400).json({ message: "Sajnos ez az időpont már foglalt vagy átfedésbe kerülne." });
+        const durationInMinutes = serviceResults[0].duration;
+
+        // 2. IDŐZÓNA-BIZTOS ELLENŐRZÉS: Ütközik-e KIHÚZOTT sávval?
+        // A MySQL fogja hozzáadni a perceket, így biztosan a magyar idővel számol!
+        const blockCheckSql = `
+            SELECT * FROM blocks 
+            WHERE start_time < DATE_ADD(?, INTERVAL ? MINUTE) 
+            AND end_time > ?
+        `;
+        
+        db.query(blockCheckSql, [start_time, durationInMinutes, start_time], (err, blockResults) => {
+            if (err) return res.status(500).json({ message: "Adatbázis hiba a blokkolások ellenőrzésekor." });
+
+            if (blockResults.length > 0) {
+                // Ha ütközik egy szürke sávval (kihúzással), azonnal elutasítjuk
+                return res.status(400).json({ message: "Ezt az időpontot a szalon fenntartotta, kérjük válassz másikat!" });
             }
 
-            // Ha szabad, mentjük
-            const insertQuery = `INSERT INTO appointments (service_id, customer_name, customer_phone, start_time, end_time) VALUES (?, ?, ?, ?, ?)`;
-            db.query(insertQuery, [service_id, customer_name, customer_phone, startDate, endDate], (err, result) => {
-                if (err) return res.status(500).send(err);
-                res.status(201).json({ message: "Sikeres foglalás!" });
+            // 3. ELLENŐRZÉS: Ütközik-e MÁSIK VENDÉG foglalásával?
+            const apptCheckSql = `
+                SELECT appointments.*, services.duration 
+                FROM appointments 
+                JOIN services ON appointments.service_id = services.id
+                WHERE appointments.start_time < DATE_ADD(?, INTERVAL ? MINUTE)
+                AND DATE_ADD(appointments.start_time, INTERVAL services.duration MINUTE) > ?
+            `;
+            
+            db.query(apptCheckSql, [start_time, durationInMinutes, start_time], (err, apptResults) => {
+                if (err) return res.status(500).json({ message: "Adatbázis hiba az ütközések ellenőrzésekor." });
+
+                if (apptResults.length > 0) {
+                    return res.status(400).json({ message: "Ez az időpont sajnos már foglalt!" });
+                }
+
+                // 4. HA MINDEN TISZTA, MENTJÜK A FOGLALÁST
+// Frissítettük a lekérdezést: kiszámoljuk és elmentjük az end_time-ot is!
+const insertSql = `
+    INSERT INTO appointments (service_id, customer_name, customer_phone, start_time, end_time) 
+    VALUES (?, ?, ?, ?, DATE_ADD(?, INTERVAL ? MINUTE))
+`;
+
+// A paraméterek közé kétszer kell a start_time (egy a kezdésnek, egy a DATE_ADD számításhoz)
+db.query(insertSql, [service_id, customer_name, customer_phone, start_time, start_time, durationInMinutes], (err, result) => {
+    if (err) {
+        // Írjuk ki a szerver konzoljára a pontos hibát, hogy legközelebb könnyebb legyen megtalálni!
+        console.error("Adatbázis mentési hiba (Foglalás):", err); 
+        return res.status(500).json({ message: "Nem sikerült elmenteni a foglalást.", error: err.message });
+    }
+    res.json({ message: "Sikeres foglalás!" });
+});
             });
         });
     });
@@ -166,5 +203,8 @@ router.get('/admin/appointments/range', (req, res) => {
         res.json(results);
     });
 });
+
+
+
 
 module.exports = router;

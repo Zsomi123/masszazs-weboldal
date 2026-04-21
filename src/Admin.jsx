@@ -16,8 +16,18 @@ function Admin() {
   
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [selectedAppt, setSelectedAppt] = useState(null);
+  
+  // --- ÁLLAPOTOK A KIHÚZÁSOKHOZ ---
+  const [blocks, setBlocks] = useState([]);
+  const [showBlockForm, setShowBlockForm] = useState(false);
+  const [newBlock, setNewBlock] = useState({
+    date: format(new Date(), 'yyyy-MM-dd'),
+    isFullDay: false,
+    startTime: '08:00',
+    endTime: '20:00'
+  });
 
-  // --- ÚJ ÁLLAPOTOK A KÉZI BESZÚRÁSHOZ ---
+  // --- ÁLLAPOTOK A KÉZI BESZÚRÁSHOZ ---
   const [showAddForm, setShowAddForm] = useState(false);
   const [newAdminAppt, setNewAdminAppt] = useState({
     service_id: '',
@@ -31,28 +41,41 @@ function Admin() {
   const [editServiceId, setEditServiceId] = useState(null);
   const [editServiceData, setEditServiceData] = useState({ name: '', duration: '', price: '' });
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      fetch('http://localhost:5001/api/services')
-        .then(res => res.json())
-        .then(data => {
-            setServices(data);
-            // Ha letöltöttük a masszázsokat, alapból kiválasztjuk az elsőt az új foglalás formban
-            if (data.length > 0) setNewAdminAppt(prev => ({ ...prev, service_id: data[0].id }));
-        });
-      fetchAppointments();
-    }
-  }, [isLoggedIn, currentWeekStart]);
-
+  // --- ADATOK LETÖLTÉSE ---
   const fetchAppointments = () => {
     const start = format(currentWeekStart, 'yyyy-MM-dd');
     const end = format(addDays(currentWeekStart, 6), 'yyyy-MM-dd');
     fetch(`http://localhost:5001/api/admin/appointments/range?start=${start}&end=${end}`)
       .then(res => res.json())
       .then(data => setAppointments(data))
-      .catch(err => console.error(err));
+      .catch(err => console.error("Hiba a foglalások letöltésekor:", err));
   };
 
+  const fetchBlocks = () => {
+    const start = format(currentWeekStart, 'yyyy-MM-dd');
+    const end = format(addDays(currentWeekStart, 6), 'yyyy-MM-dd');
+    fetch(`http://localhost:5001/api/admin/blocks/range?start=${start}&end=${end}`)
+      .then(res => res.json())
+      .then(data => setBlocks(data))
+      .catch(err => console.error("Hiba a blokkolások letöltésekor:", err));
+  };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetch('http://localhost:5001/api/services')
+        .then(res => res.json())
+        .then(data => {
+            setServices(data);
+            if (data.length > 0) setNewAdminAppt(prev => ({ ...prev, service_id: data[0].id }));
+        });
+      
+      // Mindkét naptári adatot letöltjük belépéskor és hetiváltáskor
+      fetchAppointments();
+      fetchBlocks(); 
+    }
+  }, [isLoggedIn, currentWeekStart]);
+
+  // --- BELÉPÉS ---
   const handleLogin = (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -61,6 +84,70 @@ function Admin() {
     }).then(res => res.json()).then(data => {
       if (data.success) setIsLoggedIn(true);
       else setErrorMsg(data.message);
+    });
+  };
+
+  // --- NAPTÁR MŰVELETEK ---
+  const handleAddBlock = (e) => {
+    e.preventDefault();
+    const start_time = `${newBlock.date}T${newBlock.isFullDay ? '08:00' : newBlock.startTime}:00`;
+    const end_time = `${newBlock.date}T${newBlock.isFullDay ? '20:00' : newBlock.endTime}:00`;
+
+    // JAVÍTVA: Teljes hibakezelés hozzáadva
+    fetch('http://localhost:5001/api/admin/blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start_time, end_time })
+    })
+    .then(async res => {
+        if (!res.ok) throw new Error(`Szerver hiba: ${res.status}`);
+        return res.json();
+    })
+    .then(data => {
+        if (data.success || data.message === "Sikeres mentés" || data.id) { 
+            setShowBlockForm(false);
+            fetchBlocks(); 
+        } else {
+            alert("Hiba történt a mentéskor: " + (data.message || "Ismeretlen hiba"));
+        }
+    })
+    .catch(err => {
+        console.error("Mentési hiba:", err);
+        alert("Nem sikerült elmenteni a blokkolást! Ellenőrizd, hogy fut-e a backend és létezik-e a végpont.");
+    });
+  };
+
+  const handleAdminAddAppt = (e) => {
+    e.preventDefault();
+    // A MySQL a szóközt jobban szereti a 'T' helyett a dátumban
+    const start_time = `${newAdminAppt.date} ${newAdminAppt.time}:00`;
+
+    fetch('http://localhost:5001/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            service_id: newAdminAppt.service_id,
+            customer_name: newAdminAppt.customer_name,
+            customer_phone: newAdminAppt.customer_phone,
+            start_time: start_time
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        // JAVÍTVA: Ellenőrizzük a success flaget is, ne csak a szöveget
+        if (data.success || data.message === "Sikeres foglalás!") {
+            setShowAddForm(false); 
+            fetchAppointments(); 
+            setNewAdminAppt({ ...newAdminAppt, customer_name: '', customer_phone: '' }); 
+            alert("Foglalás sikeresen rögzítve!");
+        } else {
+            // Itt írjuk ki, ha például ütközés (kihúzás) miatt nem sikerült
+            alert("Hiba: " + (data.message || "Ismeretlen hiba történt.")); 
+        }
+    })
+    .catch(err => {
+        console.error("Hiba:", err);
+        alert("Nem sikerült elérni a szervert!");
     });
   };
 
@@ -76,37 +163,7 @@ function Admin() {
     }
   };
 
-  // --- ÚJ FÜGGVÉNY: KÉZI BESZÚRÁS A NAPTÁRBA ---
-  const handleAdminAddAppt = (e) => {
-    e.preventDefault();
-    const start_time = `${newAdminAppt.date}T${newAdminAppt.time}:00`;
-
-    // Ugyanazt az okos végpontot hívjuk, amit a publikus weboldal is használ!
-    fetch('http://localhost:5001/api/appointments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            service_id: newAdminAppt.service_id,
-            customer_name: newAdminAppt.customer_name,
-            customer_phone: newAdminAppt.customer_phone,
-            start_time: start_time
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.message === "Sikeres foglalás!") {
-            setShowAddForm(false); // Bezárjuk az űrlapot
-            fetchAppointments(); // Újratöltjük a naptárat, hogy megjelenjen a blokk!
-            setNewAdminAppt({ ...newAdminAppt, customer_name: '', customer_phone: '' }); // Kiürítjük a neveket
-        } else {
-            alert(data.message); // Pl. "Ez az időpont már foglalt!"
-        }
-    })
-    .catch(err => console.error("Hiba:", err));
-  };
-
-  // --- CMS ---
-  // --- CMS ---
+  // --- CMS MŰVELETEK ---
   const handleAddService = (e) => {
     e.preventDefault();
     fetch('http://localhost:5001/api/admin/services', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newService) })
@@ -124,7 +181,6 @@ function Admin() {
     .then(res => res.json()).then(data => { if (data.success) { setServices(services.map(s => s.id === id ? { ...s, ...editServiceData } : s)); setEditServiceId(null); }});
   };
 
-  // Ezt a függvényt kellett pótolni a Szerkeszt gomb működéséhez!
   const handleEditServiceClick = (service) => {
     setEditServiceId(service.id);
     setEditServiceData({
@@ -132,6 +188,21 @@ function Admin() {
       duration: service.duration,
       price: service.price
     });
+  };
+
+  const handleDeleteBlock = (id) => {
+    if (window.confirm("Biztosan visszavonod ezt a kihúzást?")) {
+      fetch(`http://localhost:5001/api/admin/blocks/${id}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            fetchBlocks(); // Naptár frissítése
+          } else {
+            alert("Hiba történt a törlés során.");
+          }
+        })
+        .catch(err => console.error("Törlési hiba:", err));
+    }
   };
 
   const startHour = 8;
@@ -143,7 +214,10 @@ function Admin() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f4f6f8' }}>
         <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}><img src={logoImg} alt="Logo" style={{ height: '60px', borderRadius: '5px' }} /><h2 style={{ marginTop: '10px', color: '#2c3e50' }}>Admin Belépés</h2></div>
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <img src={logoImg} alt="Logo" style={{ height: '60px', borderRadius: '5px' }} />
+            <h2 style={{ marginTop: '10px', color: '#2c3e50' }}>Admin Belépés</h2>
+          </div>
           {errorMsg && <div style={{ color: 'red', marginBottom: '15px', textAlign: 'center', fontWeight: 'bold' }}>❌ {errorMsg}</div>}
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <input type="text" placeholder="Felhasználónév" value={username} onChange={(e) => setUsername(e.target.value)} style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }} required />
@@ -171,12 +245,15 @@ function Admin() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h1 style={{ color: '#2c3e50', margin: 0 }}>🗓️ Heti Naptár</h1>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                
-                {/* ÚJ: FOGLALÁS HOZZÁADÁSA GOMB */}
                 <button 
                   onClick={() => setShowAddForm(!showAddForm)} 
                   style={{ padding: '8px 15px', cursor: 'pointer', borderRadius: '5px', backgroundColor: '#27ae60', color: 'white', border: 'none', fontWeight: 'bold', marginRight: '15px' }}>
                   {showAddForm ? 'X Mégse' : '+ Új foglalás beszúrása'}
+                </button>
+                <button 
+                  onClick={() => setShowBlockForm(!showBlockForm)} 
+                  style={{ padding: '8px 15px', cursor: 'pointer', borderRadius: '5px', backgroundColor: '#7f8c8d', color: 'white', border: 'none', fontWeight: 'bold', marginRight: '15px' }}>
+                  {showBlockForm ? 'X Mégse' : '🚫 Időpont kihúzása'}
                 </button>
 
                 <button onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} style={{ padding: '8px 15px', cursor: 'pointer', borderRadius: '5px', border: '1px solid #ccc' }}>← Előző</button>
@@ -188,40 +265,64 @@ function Admin() {
             </div>
         </div>
 
-        {/* ÚJ: FOGLALÁS BESZÚRÁSA ŰRLAP (Csak akkor látszik, ha rányomtak a zöld gombra) */}
+        {/* FOGLALÁS BESZÚRÁSA ŰRLAP */}
         {showAddForm && (
             <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', marginBottom: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', borderLeft: '5px solid #27ae60' }}>
                 <h3 style={{ marginTop: 0, color: '#2c3e50' }}>Új időpont rögzítése</h3>
                 <form onSubmit={handleAdminAddAppt} style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'flex-end' }}>
-                    
                     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: '150px' }}>
                         <label style={{ fontSize: '0.85rem', marginBottom: '5px', fontWeight: 'bold' }}>Dátum</label>
                         <input type="date" value={newAdminAppt.date} onChange={e => setNewAdminAppt({...newAdminAppt, date: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
                     </div>
-                    
                     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: '120px' }}>
                         <label style={{ fontSize: '0.85rem', marginBottom: '5px', fontWeight: 'bold' }}>Időpont</label>
                         <input type="time" value={newAdminAppt.time} onChange={e => setNewAdminAppt({...newAdminAppt, time: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
                     </div>
-
                     <div style={{ display: 'flex', flexDirection: 'column', flex: 2, minWidth: '200px' }}>
                         <label style={{ fontSize: '0.85rem', marginBottom: '5px', fontWeight: 'bold' }}>Szolgáltatás</label>
                         <select value={newAdminAppt.service_id} onChange={e => setNewAdminAppt({...newAdminAppt, service_id: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}>
                             {services.map(s => <option key={s.id} value={s.id}>{s.name} ({s.duration} perc)</option>)}
                         </select>
                     </div>
-
                     <div style={{ display: 'flex', flexDirection: 'column', flex: 2, minWidth: '200px' }}>
                         <label style={{ fontSize: '0.85rem', marginBottom: '5px', fontWeight: 'bold' }}>Vendég neve</label>
                         <input type="text" placeholder="Pl. Kiss Anna" value={newAdminAppt.customer_name} onChange={e => setNewAdminAppt({...newAdminAppt, customer_name: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
                     </div>
-
                     <div style={{ display: 'flex', flexDirection: 'column', flex: 2, minWidth: '150px' }}>
                         <label style={{ fontSize: '0.85rem', marginBottom: '5px', fontWeight: 'bold' }}>Telefonszám</label>
                         <input type="text" placeholder="+36 30..." value={newAdminAppt.customer_phone} onChange={e => setNewAdminAppt({...newAdminAppt, customer_phone: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
                     </div>
-
                     <button type="submit" style={{ backgroundColor: '#27ae60', color: 'white', border: 'none', padding: '10px 25px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', height: '40px' }}>Mentés a naptárba</button>
+                </form>
+            </div>
+        )}
+
+        {/* KIHÚZÁS ŰRLAP */}
+        {showBlockForm && (
+            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', marginBottom: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', borderLeft: '5px solid #7f8c8d' }}>
+                <h3 style={{ marginTop: 0, color: '#2c3e50' }}>🚫 Nap vagy idősáv blokkolása</h3>
+                <form onSubmit={handleAddBlock} style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: '150px' }}>
+                        <label style={{ fontSize: '0.85rem', marginBottom: '5px', fontWeight: 'bold' }}>Dátum</label>
+                        <input type="date" value={newBlock.date} onChange={e => setNewBlock({...newBlock, date: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px' }}>
+                        <input type="checkbox" id="fullday" checked={newBlock.isFullDay} onChange={e => setNewBlock({...newBlock, isFullDay: e.target.checked})} />
+                        <label htmlFor="fullday" style={{ fontWeight: 'bold', cursor: 'pointer' }}>Egész napos kihúzás</label>
+                    </div>
+                    {!newBlock.isFullDay && (
+                        <>
+                            <div style={{ display: 'flex', flexDirection: 'column', minWidth: '120px' }}>
+                                <label style={{ fontSize: '0.85rem', marginBottom: '5px', fontWeight: 'bold' }}>Kezdés</label>
+                                <input type="time" value={newBlock.startTime} onChange={e => setNewBlock({...newBlock, startTime: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', minWidth: '120px' }}>
+                                <label style={{ fontSize: '0.85rem', marginBottom: '5px', fontWeight: 'bold' }}>Befejezés</label>
+                                <input type="time" value={newBlock.endTime} onChange={e => setNewBlock({...newBlock, endTime: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
+                            </div>
+                        </>
+                    )}
+                    <button type="submit" style={{ backgroundColor: '#7f8c8d', color: 'white', border: 'none', padding: '10px 25px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', height: '40px' }}>Blokkolás mentése</button>
                 </form>
             </div>
         )}
@@ -260,61 +361,96 @@ function Admin() {
 
                     {hours.map(h => <div key={`line-${h}`} style={{ height: '60px', borderBottom: '1px solid #f5f5f5' }}></div>)}
 
-                    {/* Foglalások (Blokkok) rajzolása az adott napra */}
-{/* Foglalások (Blokkok) rajzolása az adott napra */}
-{appointments.filter(a => isSameDay(new Date(a.start_time), day)).map(appt => {
-    const start = new Date(appt.start_time);
+                    {/* --- KIHÚZOTT (BLOKKOLT) IDŐSÁVOK RAJZOLÁSA --- */}
+                    {/* --- KIHÚZOTT (BLOKKOLT) IDŐSÁVOK RAJZOLÁSA --- */}
+{blocks.filter(b => isSameDay(new Date(b.start_time), day)).map(block => {
+    const start = new Date(block.start_time);
+    const end = new Date(block.end_time);
     
     const topPosition = ((start.getHours() - startHour) * 60) + start.getMinutes() + 50;
-    
-    // VISSZAÁLLÍTVA: A magasság újra a masszázs pontos hossza (1 perc = 1 pixel)
-    const height = appt.duration; 
-    
-    // ÚJ LOGIKA: Ha a masszázs 35 perces vagy annál rövidebb, ezt "rövidnek" számítjuk
-    const isShort = height <= 35;
+    const height = ((end.getTime() - start.getTime()) / 1000 / 60);
     
     return (
         <div 
-            key={appt.id} 
-            onClick={() => setSelectedAppt(appt)}
+            key={`block-${block.id}`} 
             style={{ 
                 position: 'absolute', 
                 top: `${topPosition}px`, 
                 left: '2px', 
                 right: '2px', 
                 height: `${height}px`, 
-                backgroundColor: selectedAppt?.id === appt.id ? '#f39c12' : '#3498db', 
-                color: 'white', 
+                background: 'repeating-linear-gradient(45deg, #e0e0e0, #e0e0e0 10px, #cccccc 10px, #cccccc 20px)',
+                color: '#555', 
                 borderRadius: '4px', 
-                padding: isShort ? '0 6px' : '4px 6px', // Rövidnél kivesszük a felső/alsó margót
-                boxShadow: '0 2px 5px rgba(0,0,0,0.15)', 
-                cursor: 'pointer', 
+                padding: '4px 6px',
+                cursor: 'pointer', // Változtasd pointerre, hogy látszódjon: kattintható
                 overflow: 'hidden', 
-                zIndex: 10,
-                border: '1px solid rgba(0,0,0,0.1)',
+                zIndex: 5, 
+                border: '1px solid #bbb',
                 display: 'flex',
-                // OKOS ELRENDEZÉS: Ha rövid, akkor egymás mellé (row), ha hosszú, egymás alá (column)
-                flexDirection: isShort ? 'row' : 'column',
-                alignItems: isShort ? 'center' : 'flex-start',
-                gap: isShort ? '8px' : '2px', // Két szöveg közötti távolság
-                lineHeight: '1.1'
+                justifyContent: 'center',
+                alignItems: 'center',
+                opacity: 0.8,
+                transition: 'all 0.2s'
             }}
+            title="Kattints a törléshez"
+            onClick={() => handleDeleteBlock(block.id)} // Kattintásra törlés
         >
-            <div style={{ fontWeight: 'bold', fontSize: '0.75rem', opacity: 0.9 }}>
-                {format(start, 'HH:mm')}
-            </div>
-            <div style={{ 
-                fontWeight: 'bold', 
-                fontSize: isShort ? '0.75rem' : '0.85rem', // Rövid doboznál icipicit kisebb betű
-                textOverflow: 'ellipsis', 
-                whiteSpace: 'nowrap', 
-                overflow: 'hidden' 
-            }}>
-                {appt.customer_name}
-            </div>
+            <span style={{ fontWeight: 'bold', fontSize: '0.85rem', backgroundColor: 'rgba(255,255,255,0.8)', padding: '2px 8px', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                🚫 Kihúzás törlése
+            </span>
         </div>
     );
 })}
+
+                    {/* --- FOGLALÁSOK RAJZOLÁSA --- */}
+                    {appointments.filter(a => isSameDay(new Date(a.start_time), day)).map(appt => {
+                        const start = new Date(appt.start_time);
+                        const topPosition = ((start.getHours() - startHour) * 60) + start.getMinutes() + 50;
+                        const height = appt.duration; 
+                        const isShort = height <= 35;
+                        
+                        return (
+                            <div 
+                                key={appt.id} 
+                                onClick={() => setSelectedAppt(appt)}
+                                style={{ 
+                                    position: 'absolute', 
+                                    top: `${topPosition}px`, 
+                                    left: '2px', 
+                                    right: '2px', 
+                                    height: `${height}px`, 
+                                    backgroundColor: selectedAppt?.id === appt.id ? '#f39c12' : '#3498db', 
+                                    color: 'white', 
+                                    borderRadius: '4px', 
+                                    padding: isShort ? '0 6px' : '4px 6px', 
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.15)', 
+                                    cursor: 'pointer', 
+                                    overflow: 'hidden', 
+                                    zIndex: 10,
+                                    border: '1px solid rgba(0,0,0,0.1)',
+                                    display: 'flex',
+                                    flexDirection: isShort ? 'row' : 'column',
+                                    alignItems: isShort ? 'center' : 'flex-start',
+                                    gap: isShort ? '8px' : '2px', 
+                                    lineHeight: '1.1'
+                                }}
+                            >
+                                <div style={{ fontWeight: 'bold', fontSize: '0.75rem', opacity: 0.9 }}>
+                                    {format(start, 'HH:mm')}
+                                </div>
+                                <div style={{ 
+                                    fontWeight: 'bold', 
+                                    fontSize: isShort ? '0.75rem' : '0.85rem', 
+                                    textOverflow: 'ellipsis', 
+                                    whiteSpace: 'nowrap', 
+                                    overflow: 'hidden' 
+                                }}>
+                                    {appt.customer_name}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )})}
         </div>

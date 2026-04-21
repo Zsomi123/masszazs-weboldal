@@ -90,6 +90,7 @@ function Booking() {
       return;
     }
 
+    // A dátum és idő közé tegyünk szóközt a 'T' helyett
     const start_time = `${format(selectedDate, 'yyyy-MM-dd')} ${selectedTime}:00`;
 
     fetch('http://localhost:5001/api/appointments', {
@@ -104,17 +105,21 @@ function Booking() {
     })
     .then(res => res.json())
     .then(data => {
-        if(data.message.includes("foglalt")) {
-            setMessage(`❌ ${data.message}`);
-        } else {
+        // JAVÍTVA: Ha a szerver success:true-t küld, vagy a sikeres üzenetet
+        if (data.success || data.message === "Sikeres foglalás!") {
             setMessage('🎉 Sikeres foglalás! Hamarosan várunk.');
             setFormData({ name: '', phone: '', serviceId: '' });
             setSelectedTime(null);
-            // Frissítjük a naptárat, hogy rögtön eltűnjön a most lefoglalt időpont
-            setSelectedDate(new Date(selectedDate)); 
+            setSelectedDate(new Date(selectedDate)); // Naptár frissítése
+        } else {
+            // Ez fogja kiírni, ha foglalt vagy ha admin által ki van húzva
+            setMessage(`❌ ${data.message}`);
         }
     })
-    .catch(err => setMessage('❌ Hiba történt a foglalás során.'));
+    .catch(err => {
+        console.error("Hiba:", err);
+        setMessage('❌ Hiba történt a foglalás során. Ellenőrizd az internetkapcsolatot!');
+    });
   };
 
   return (
@@ -155,7 +160,8 @@ function Booking() {
               </select>
             </div>
             
-            <button type="submit" disabled={!selectedTime || (selectedDate.getDay() === 0 || selectedDate.getDay() === 6)} className="cta-button" style={{ width: '100%', opacity: selectedTime ? 1 : 0.5 }}>
+            {/* A gombot csak akkor engedélyezzük, ha választott időpontot */}
+            <button type="submit" disabled={!selectedTime} className="cta-button" style={{ width: '100%', opacity: selectedTime ? 1 : 0.5 }}>
               {selectedTime ? `Foglalás ${selectedTime}-ra` : 'Válassz időpontot a naptárból'}
             </button>
           </form>
@@ -171,23 +177,16 @@ function Booking() {
               onChange={setSelectedDate} 
               value={selectedDate} 
               minDate={new Date()} // Nem lehet a múltba foglalni!
-              // ÚJ: Hétvégék kiszürkítése és letiltása
-              tileDisabled={({ date, view }) => view === 'month' && (date.getDay() === 0 || date.getDay() === 6)}
             />
           </div>
 
-          {/* Időpont Gombok vagy Figyelmeztetés */}
+          {/* Időpont Gombok */}
           <div style={{ width: '100%', textAlign: 'center' }}>
             <h3 style={{ marginBottom: '15px', fontSize: '1.2rem' }}>
               Szabad időpontok ekkor: {format(selectedDate, 'yyyy. MM. dd.')}
             </h3>
             
-            {/* ÚJ: Ha hétvége van kiválasztva (pl. ma szombat van, és az az alapértelmezett) */}
-            {selectedDate && (selectedDate.getDay() === 0 || selectedDate.getDay() === 6) ? (
-               <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '15px', borderRadius: '8px', textAlign: 'center', fontWeight: 'bold', border: '1px solid #f87171' }}>
-                  Sajnáljuk, de hétvégén zárva tartunk! Kérjük, válassz egy hétköznapi napot a naptárban.
-               </div>
-            ) : !formData.serviceId ? (
+            {!formData.serviceId ? (
                <p style={{ color: '#E67E22', fontWeight: 'bold' }}>Kérlek előbb válassz masszázst a bal oldalon!</p>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '10px' }}>
