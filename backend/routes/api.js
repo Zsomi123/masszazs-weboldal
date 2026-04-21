@@ -152,4 +152,19 @@ router.delete('/admin/services/:id', (req, res) => {
     });
 });
 
+// ADMIN: Foglalások lekérése két dátum között (Heti nézethez)
+router.get('/admin/appointments/range', (req, res) => {
+    const { start, end } = req.query; // Pl. ?start=2024-04-21&end=2024-04-27
+    const query = `
+        SELECT appointments.*, services.name AS service_name, services.duration 
+        FROM appointments 
+        JOIN services ON appointments.service_id = services.id 
+        WHERE start_time >= ? AND start_time <= ?
+    `;
+    db.query(query, [start, end], (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.json(results);
+    });
+});
+
 module.exports = router;

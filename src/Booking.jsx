@@ -155,8 +155,7 @@ function Booking() {
               </select>
             </div>
             
-            {/* A gombot csak akkor engedélyezzük, ha választott időpontot */}
-            <button type="submit" disabled={!selectedTime} className="cta-button" style={{ width: '100%', opacity: selectedTime ? 1 : 0.5 }}>
+            <button type="submit" disabled={!selectedTime || (selectedDate.getDay() === 0 || selectedDate.getDay() === 6)} className="cta-button" style={{ width: '100%', opacity: selectedTime ? 1 : 0.5 }}>
               {selectedTime ? `Foglalás ${selectedTime}-ra` : 'Válassz időpontot a naptárból'}
             </button>
           </form>
@@ -172,16 +171,23 @@ function Booking() {
               onChange={setSelectedDate} 
               value={selectedDate} 
               minDate={new Date()} // Nem lehet a múltba foglalni!
+              // ÚJ: Hétvégék kiszürkítése és letiltása
+              tileDisabled={({ date, view }) => view === 'month' && (date.getDay() === 0 || date.getDay() === 6)}
             />
           </div>
 
-          {/* Időpont Gombok */}
+          {/* Időpont Gombok vagy Figyelmeztetés */}
           <div style={{ width: '100%', textAlign: 'center' }}>
             <h3 style={{ marginBottom: '15px', fontSize: '1.2rem' }}>
               Szabad időpontok ekkor: {format(selectedDate, 'yyyy. MM. dd.')}
             </h3>
             
-            {!formData.serviceId ? (
+            {/* ÚJ: Ha hétvége van kiválasztva (pl. ma szombat van, és az az alapértelmezett) */}
+            {selectedDate && (selectedDate.getDay() === 0 || selectedDate.getDay() === 6) ? (
+               <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '15px', borderRadius: '8px', textAlign: 'center', fontWeight: 'bold', border: '1px solid #f87171' }}>
+                  Sajnáljuk, de hétvégén zárva tartunk! Kérjük, válassz egy hétköznapi napot a naptárban.
+               </div>
+            ) : !formData.serviceId ? (
                <p style={{ color: '#E67E22', fontWeight: 'bold' }}>Kérlek előbb válassz masszázst a bal oldalon!</p>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '10px' }}>
