@@ -8,7 +8,7 @@ import logoImg from '../assets/logo.png';
 
 function Booking() {
   const [services, setServices] = useState([]);
-  const [formData, setFormData] = useState({ name: '', phone: '', serviceId: '' });
+const [formData, setFormData] = useState({ name: '', email: '', phone: '', serviceId: '' });
   const [message, setMessage] = useState('');
   
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -88,6 +88,7 @@ function Booking() {
       body: JSON.stringify({
         service_id: formData.serviceId,
         customer_name: formData.name,
+        customer_email: formData.email,
         customer_phone: formData.phone,
         start_time: start_time,
         source: 'online'
@@ -96,11 +97,12 @@ function Booking() {
     .then(res => res.json())
     .then(data => {
         if (data.success || data.message === "Sikeres foglalás!") {
-            setMessage('🎉 Sikeres foglalás! Hamarosan várunk.');
-            setFormData({ name: '', phone: '', serviceId: '' });
-            setSelectedTime(null);
-            setSelectedDate(new Date(selectedDate)); 
-        } else {
+    setMessage('🎉 Sikeres foglalás! Hamarosan várunk.');
+    // ITT A JAVÍTÁS: add hozzá az email: ''-t is!
+    setFormData({ name: '', email: '', phone: '', serviceId: '' }); 
+    setSelectedTime(null);
+    setSelectedDate(new Date(selectedDate)); 
+}else {
             setMessage(`❌ ${data.message}`);
         }
     })
@@ -171,6 +173,11 @@ function Booking() {
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#34495e' }}>Telefonszám</label>
                   <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required placeholder="+36 30 123 4567" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
                 </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#34495e' }}>Email cím</label>
+                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} required placeholder="pelda@email.hu" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                </div>
+                
                 <button type="submit" disabled={!selectedTime || !formData.serviceId} style={{ 
                   marginTop: '10px', width: '100%', padding: '15px', backgroundColor: '#E67E22', color: 'white', 
                   border: 'none', borderRadius: '8px', cursor: (selectedTime && formData.serviceId) ? 'pointer' : 'not-allowed', 

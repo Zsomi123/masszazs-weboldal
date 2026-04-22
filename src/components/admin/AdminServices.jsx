@@ -7,7 +7,7 @@ function AdminServices({ services, fetchServices }) {
 
   const handleAddService = (e) => {
     e.preventDefault();
-    fetch('http://localhost:5001/api/admin/services', { 
+    fetch('http://localhost:5001/api/services', { 
       method: 'POST', 
       headers: { 'Content-Type': 'application/json' }, 
       body: JSON.stringify(newService) 
@@ -23,7 +23,7 @@ function AdminServices({ services, fetchServices }) {
 
   const handleDeleteService = (id) => {
     if (window.confirm("Biztosan törlöd?")) {
-      fetch(`http://localhost:5001/api/admin/services/${id}`, { method: 'DELETE' })
+      fetch(`http://localhost:5001/api/services/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(data => { 
         if (data.success) {
@@ -41,7 +41,7 @@ function AdminServices({ services, fetchServices }) {
   };
 
   const handleSaveService = (id) => {
-    fetch(`http://localhost:5001/api/admin/services/${id}`, { 
+    fetch(`http://localhost:5001/api/services/${id}`, { 
       method: 'PUT', 
       headers: { 'Content-Type': 'application/json' }, 
       body: JSON.stringify(editServiceData) 

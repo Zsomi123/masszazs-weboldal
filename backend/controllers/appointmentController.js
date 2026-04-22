@@ -4,55 +4,45 @@ const db = require('../config/db');
 // --- FOGLALÁSOK (VENDÉG ÉS ADMIN) ---
 
 // Új foglalás (Okos ütközésvizsgálattal)
+// Új foglalás (Okos ütközésvizsgálattal + EMAIL)
 exports.createAppointment = (req, res) => { 
-    const { service_id, customer_name, customer_phone, start_time, source = 'online' } = req.body;
+    console.log("Beérkező adatok a szerverre:", req.body);
+    // ÚJ: Itt már várjuk a customer_email-t is a req.body-ból
+    const { service_id, customer_name, customer_email, customer_phone, start_time, source = 'online' } = req.body;
 
-    // Hétvége ellenőrzése
     const dateObj = new Date(start_time);
-    const dayOfWeek = dateObj.getDay(); // 0 a Vasárnap, 6 a Szombat
+    const dayOfWeek = dateObj.getDay(); 
     
     if (dayOfWeek === 0 || dayOfWeek === 6) {
         return res.status(400).json({ message: "Sajnos hétvégén zárva vagyunk! Kérjük, válassz hétköznapi időpontot." });
     }
 
     db.query('SELECT duration FROM services WHERE id = ?', [service_id], (err, serviceResults) => {
-        if (err || serviceResults.length === 0) {
-            return res.status(500).json({ message: "Hiba a szolgáltatás lekérésekor." });
-        }
-
+        if (err || serviceResults.length === 0) return res.status(500).json({ message: "Hiba a szolgáltatás lekérésekor." });
         const durationInMinutes = serviceResults[0].duration;
 
-        // Ütközésvizsgálat: Kihúzott sávok (Blocks)
-        const blockCheckSql = `
-            SELECT * FROM blocks 
-            WHERE start_time < DATE_ADD(?, INTERVAL ? MINUTE) 
-            AND end_time > ?
-        `;
-        
+        const blockCheckSql = `SELECT * FROM blocks WHERE start_time < DATE_ADD(?, INTERVAL ? MINUTE) AND end_time > ?`;
         db.query(blockCheckSql, [start_time, durationInMinutes, start_time], (err, blockResults) => {
-            if (err) return res.status(500).json({ message: "Adatbázis hiba a blokkolások ellenőrzésekor." });
+            if (err) return res.status(500).json({ message: "Adatbázis hiba." });
             if (blockResults.length > 0) return res.status(400).json({ message: "Ezt az időpontot a szalon fenntartotta, kérjük válassz másikat!" });
 
-            // Ütközésvizsgálat: Másik vendég
             const apptCheckSql = `
-                SELECT appointments.*, services.duration 
-                FROM appointments 
+                SELECT appointments.*, services.duration FROM appointments 
                 JOIN services ON appointments.service_id = services.id
-                WHERE appointments.start_time < DATE_ADD(?, INTERVAL ? MINUTE)
-                AND DATE_ADD(appointments.start_time, INTERVAL services.duration MINUTE) > ?
+                WHERE appointments.start_time < DATE_ADD(?, INTERVAL ? MINUTE) AND DATE_ADD(appointments.start_time, INTERVAL services.duration MINUTE) > ?
             `;
-            
             db.query(apptCheckSql, [start_time, durationInMinutes, start_time], (err, apptResults) => {
-                if (err) return res.status(500).json({ message: "Adatbázis hiba az ütközések ellenőrzésekor." });
+                if (err) return res.status(500).json({ message: "Adatbázis hiba." });
                 if (apptResults.length > 0) return res.status(400).json({ message: "Ez az időpont sajnos már foglalt!" });
 
-                // Mentés
+                // ÚJ: Az INSERT SQL-be bekerült a customer_email
                 const insertSql = `
-                    INSERT INTO appointments (service_id, customer_name, customer_phone, start_time, end_time, source) 
-                    VALUES (?, ?, ?, ?, DATE_ADD(?, INTERVAL ? MINUTE), ?)
+                    INSERT INTO appointments (service_id, customer_name, customer_email, customer_phone, start_time, end_time, source) 
+                    VALUES (?, ?, ?, ?, ?, DATE_ADD(?, INTERVAL ? MINUTE), ?)
                 `;
 
-                db.query(insertSql, [service_id, customer_name, customer_phone, start_time, start_time, durationInMinutes, source], (err, result) => {
+                // ÚJ: A tömbbe is bekerült a customer_email változó
+                db.query(insertSql, [service_id, customer_name, customer_email, customer_phone, start_time, start_time, durationInMinutes, source], (err, result) => {
                     if (err) return res.status(500).json({ message: "Nem sikerült elmenteni a foglalást.", error: err.message });
                     res.json({ message: "Sikeres foglalás!" });
                 });
