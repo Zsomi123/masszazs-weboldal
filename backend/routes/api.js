@@ -14,7 +14,7 @@ router.get('/services', (req, res) => {
 
 // 2. FOGLALÁS (Okos ütközésvizsgálattal!)
 router.post('/appointments', (req, res) => { 
-    const { service_id, customer_name, customer_phone, start_time } = req.body;
+    const { service_id, customer_name, customer_phone, start_time, source = 'online' } = req.body;
 
     // --- ÚJ RÉSZ: Hétvége ellenőrzése a szerveren ---
     const dateObj = new Date(start_time);
@@ -65,16 +65,13 @@ router.post('/appointments', (req, res) => {
                 }
 
                 // 4. HA MINDEN TISZTA, MENTJÜK A FOGLALÁST
-// Frissítettük a lekérdezést: kiszámoljuk és elmentjük az end_time-ot is!
 const insertSql = `
-    INSERT INTO appointments (service_id, customer_name, customer_phone, start_time, end_time) 
-    VALUES (?, ?, ?, ?, DATE_ADD(?, INTERVAL ? MINUTE))
+    INSERT INTO appointments (service_id, customer_name, customer_phone, start_time, end_time, source) 
+    VALUES (?, ?, ?, ?, DATE_ADD(?, INTERVAL ? MINUTE), ?)
 `;
 
-// A paraméterek közé kétszer kell a start_time (egy a kezdésnek, egy a DATE_ADD számításhoz)
-db.query(insertSql, [service_id, customer_name, customer_phone, start_time, start_time, durationInMinutes], (err, result) => {
+db.query(insertSql, [service_id, customer_name, customer_phone, start_time, start_time, durationInMinutes, source], (err, result) => {
     if (err) {
-        // Írjuk ki a szerver konzoljára a pontos hibát, hogy legközelebb könnyebb legyen megtalálni!
         console.error("Adatbázis mentési hiba (Foglalás):", err); 
         return res.status(500).json({ message: "Nem sikerült elmenteni a foglalást.", error: err.message });
     }
