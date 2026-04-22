@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './Home';
-import Booking from './Booking';
-import Admin from './Admin'; // Ezt adtuk hozzá
-import './App.css';
+// Figyeld meg: most már a pages mappából importáljuk őket!
+import Home from './pages/Home';
+import Booking from './pages/Booking';
+import Admin from './pages/Admin'; 
+import './App.css'; // Ez maradt ugyanaz
 
 function App() {
   return (

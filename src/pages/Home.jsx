@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import './App.css';
-import heroBg from './assets/hero-bg.JPG'; 
-import logoImg from './assets/Logo.png'; // <-- Ezt a sort add hozzá!
+import '../App.css';
+import heroBg from '../assets/hero-bg.JPG'; 
+import logoImg from '../assets/Logo.png'; // <-- Ezt a sort add hozzá!
 
 function Home() {
   // Ez a változó figyeli, hogy nyitva van-e a menü mobilon

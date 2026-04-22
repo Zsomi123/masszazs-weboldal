@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import Calendar from 'react-calendar'; 
 import 'react-calendar/dist/Calendar.css'; 
 import { format, isBefore, addMinutes } from 'date-fns';
-import './App.css';
-import logoImg from './assets/logo.png';
+import '../App.css';
+import logoImg from '../assets/logo.png';
 
 function Booking() {
   const [services, setServices] = useState([]);
