@@ -1,5 +1,6 @@
 // backend/controllers/appointmentController.js
 const db = require('../config/db');
+const sendEmail = require('../utils/sendEmail'); // ÚJ: Email segédfüggvény
 
 // --- FOGLALÁSOK (VENDÉG ÉS ADMIN) ---
 
@@ -42,8 +43,24 @@ exports.createAppointment = (req, res) => {
                 `;
 
                 // ÚJ: A tömbbe is bekerült a customer_email változó
-                db.query(insertSql, [service_id, customer_name, customer_email, customer_phone, start_time, start_time, durationInMinutes, source], (err, result) => {
+                // Mentés az adatbázisba
+                db.query(insertSql, [service_id, customer_name, customer_email, customer_phone, start_time, start_time, durationInMinutes, source], async (err, result) => {
                     if (err) return res.status(500).json({ message: "Nem sikerült elmenteni a foglalást.", error: err.message });
+                    
+                    // ÚJ: Ha van email cím megadva, küldjük ki a visszaigazolást!
+                    if (customer_email) {
+                        // Kicsit formázzuk a dátumot a magyar olvasatnak megfelelően
+                        const formattedDate = new Date(start_time).toLocaleString('hu-HU', { 
+                            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                        });
+                        
+                        // Lekérjük a masszázs nevét, hogy bele tudjuk írni az emailbe
+                        const serviceName = serviceResults[0]?.name || "Masszázs";
+
+                        // Meghívjuk a mi kis email küldő függvényünket
+                        await sendEmail(customer_email, customer_name, formattedDate, serviceName);
+                    }
+
                     res.json({ message: "Sikeres foglalás!" });
                 });
             });

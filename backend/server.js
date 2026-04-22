@@ -1,8 +1,9 @@
 // backend/server.js
+require('dotenv').config(); // Ez nagyon fontos az email jelszó titkosítása miatt!
 const express = require('express');
 const cors = require('cors');
 
-// Beimportáljuk az útvonalainkat
+// Beimportáljuk a szép új útvonalainkat a routes mappából
 const authRoutes = require('./routes/authRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
@@ -13,15 +14,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Útvonalak (Routes) bekötése
-// Így minden authRoute a /api prefixet kapja (pl. /api/login)
-app.use('/api', authRoutes); 
-
-// A szolgáltatások a /api/services alatt élnek majd
-app.use('/api/services', serviceRoutes); 
-
-// A foglalások és blokkolások a /api/appointments alatt élnek
-app.use('/api/appointments', appointmentRoutes);
+// Útvonalak (Routes) bekötése a fő "kapukhoz"
+app.use('/api', authRoutes); // Belépéshez
+app.use('/api/services', serviceRoutes); // Szolgáltatásokhoz
+app.use('/api/appointments', appointmentRoutes); // Foglalásokhoz és naptárhoz (ITT FUT LE AZ EMAIL KÜLDÉS!)
 
 // Szerver indítása
 const PORT = 5001;
