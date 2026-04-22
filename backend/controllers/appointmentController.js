@@ -169,3 +169,37 @@ exports.deleteBlock = (req, res) => {
         res.json({ success: true, message: "Kihúzás sikeresen törölve!" });
     });
 };
+
+// Publikus: Foglalás lemondása a vendég által (Email linkből)
+exports.cancelAppointmentPublic = (req, res) => {
+    const appointmentId = req.params.id;
+
+    // 1. Megkeressük a foglalást
+    db.query("SELECT start_time FROM appointments WHERE id = ?", [appointmentId], (err, results) => {
+        if (err) return res.status(500).json({ message: "Szerver hiba történt." });
+        
+        // Ha nincs ilyen ID (pl. már lemondta korábban)
+        if (results.length === 0) {
+            return res.status(404).json({ message: "Ez a foglalás nem található, vagy már korábban le lett mondva." });
+        }
+
+        const appointmentTime = new Date(results[0].start_time);
+        const currentTime = new Date();
+        
+        // Kiszámoljuk, hány óra van hátra a kezdésig
+        const hoursDifference = (appointmentTime - currentTime) / (1000 * 60 * 60);
+
+        // 2. Ellenőrizzük a 24 órás szabályt
+        if (hoursDifference < 24) {
+            return res.status(400).json({ 
+                message: "Az időpont kezdetéig kevesebb, mint 24 óra van hátra, ezért online már nem mondható le. Kérlek, hívj minket telefonon!" 
+            });
+        }
+
+        // 3. Ha minden rendben, töröljük az adatbázisból
+        db.query("DELETE FROM appointments WHERE id = ?", [appointmentId], (deleteErr, deleteResult) => {
+            if (deleteErr) return res.status(500).json({ message: "Hiba a foglalás törlésekor." });
+            res.json({ message: "A foglalásodat sikeresen lemondtuk. Reméljük, hamarosan újra találkozunk!" });
+        });
+    });
+};

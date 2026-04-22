@@ -1,9 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-// Figyeld meg: most már a pages mappából importáljuk őket!
+// A korábbi oldalaid:
 import Home from './pages/Home';
 import Booking from './pages/Booking';
 import Admin from './pages/Admin'; 
-import './App.css'; // Ez maradt ugyanaz
+// ÚJ: A lemondási oldal importálása
+import CancelAppointment from './pages/CancelAppointment'; 
+
+import './App.css';
 
 function App() {
   return (
@@ -14,6 +17,9 @@ function App() {
         
         {/* A Titkos Admin Útvonal: */}
         <Route path="/admin" element={<Admin />} />
+
+        {/* ÚJ: A lemondási oldal útvonala az egyedi ID-val */}
+        <Route path="/cancel-appointment/:id" element={<CancelAppointment />} />
       </Routes>
     </Router>
   );

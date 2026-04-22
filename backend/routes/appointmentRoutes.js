@@ -17,5 +17,7 @@ router.delete('/admin/:id', appointmentController.deleteAppointment);
 router.get('/admin/blocks/range', appointmentController.getBlocksRange);
 router.post('/admin/blocks', appointmentController.createBlock);
 router.delete('/admin/blocks/:id', appointmentController.deleteBlock);
+// Publikus lemondási útvonal (figyelj, hogy a router.delete vagy app.delete-et használod)
+router.delete('/cancel/:id', appointmentController.cancelAppointmentPublic);
 
 module.exports = router;
