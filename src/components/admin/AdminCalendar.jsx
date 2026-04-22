@@ -147,7 +147,7 @@ function AdminCalendar({ services }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
           <h1 style={{ color: '#2c3e50', margin: 0, fontSize: '1.8rem' }}>🗓️ Heti Naptár</h1>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', width: '100%' }}>
-              <button onClick={() => setShowAddForm(!showAddForm)} style={{ flex: 1, padding: '10px', borderRadius: '5px', backgroundColor: '#27ae60', color: 'white', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
+              <button onClick={() => setShowAddForm(!showAddForm)} style={{ flex: 1, padding: '10px', borderRadius: '5px', backgroundColor: '#3498db', color: 'white', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
                 {showAddForm ? 'X Mégse' : '+ Új foglalás'}
               </button>
               <button onClick={() => setShowBlockForm(!showBlockForm)} style={{ flex: 1, padding: '10px', borderRadius: '5px', backgroundColor: '#7f8c8d', color: 'white', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>

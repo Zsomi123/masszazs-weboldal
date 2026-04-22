@@ -6,63 +6,72 @@ const sendEmail = require('../utils/sendEmail'); // ÚJ: Email segédfüggvény
 
 // Új foglalás (Okos ütközésvizsgálattal)
 // Új foglalás (Okos ütközésvizsgálattal + EMAIL)
+// Új foglalás (Okos ütközésvizsgálattal + GYORS EMAIL)
 exports.createAppointment = (req, res) => { 
     console.log("Beérkező adatok a szerverre:", req.body);
-    // ÚJ: Itt már várjuk a customer_email-t is a req.body-ból
-    const { service_id, customer_name, customer_email, customer_phone, start_time, source = 'online' } = req.body;
-
-    const dateObj = new Date(start_time);
-    const dayOfWeek = dateObj.getDay(); 
     
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-        return res.status(400).json({ message: "Sajnos hétvégén zárva vagyunk! Kérjük, válassz hétköznapi időpontot." });
-    }
+    const { 
+        service_id, 
+        customer_name, 
+        customer_phone, 
+        start_time, 
+        source = 'online'
+    } = req.body;
 
-    db.query('SELECT duration FROM services WHERE id = ?', [service_id], (err, serviceResults) => {
-        if (err || serviceResults.length === 0) return res.status(500).json({ message: "Hiba a szolgáltatás lekérésekor." });
+    const customer_email = req.body.customer_email && req.body.customer_email.trim() !== "" 
+        ? req.body.customer_email 
+        : null;
+
+    // 1. LEKÉRJÜK A SZOLGÁLTATÁS ADATAIT (Név és Időtartam) - Itt kap értéket a serviceName!
+    db.query('SELECT name, duration FROM services WHERE id = ?', [service_id], (err, serviceResults) => {
+        if (err || serviceResults.length === 0) {
+            return res.status(500).json({ message: "Hiba a szolgáltatás lekérésekor." });
+        }
+
         const durationInMinutes = serviceResults[0].duration;
+        const serviceName = serviceResults[0].name; // <-- ITT DEFINIÁLJUK!
 
-        const blockCheckSql = `SELECT * FROM blocks WHERE start_time < DATE_ADD(?, INTERVAL ? MINUTE) AND end_time > ?`;
-        db.query(blockCheckSql, [start_time, durationInMinutes, start_time], (err, blockResults) => {
-            if (err) return res.status(500).json({ message: "Adatbázis hiba." });
-            if (blockResults.length > 0) return res.status(400).json({ message: "Ezt az időpontot a szalon fenntartotta, kérjük válassz másikat!" });
+        // 2. ÜTKÖZÉSVIZSGÁLAT (Blokkolások és más foglalások)
+        const checkSql = `
+            SELECT * FROM blocks 
+            WHERE start_time < DATE_ADD(?, INTERVAL ? MINUTE) AND end_time > ?
+            UNION
+            SELECT appointments.id, appointments.start_time, appointments.end_time 
+            FROM appointments 
+            JOIN services ON appointments.service_id = services.id
+            WHERE appointments.start_time < DATE_ADD(?, INTERVAL ? MINUTE)
+            AND DATE_ADD(appointments.start_time, INTERVAL services.duration MINUTE) > ?
+        `;
+        
+        db.query(checkSql, [start_time, durationInMinutes, start_time, start_time, durationInMinutes, start_time], (err, conflictResults) => {
+            if (err) return res.status(500).json({ message: "Hiba az ellenőrzéskor." });
+            if (conflictResults.length > 0) {
+                return res.status(400).json({ message: "Ez az időpont már foglalt vagy blokkolva van!" });
+            }
 
-            const apptCheckSql = `
-                SELECT appointments.*, services.duration FROM appointments 
-                JOIN services ON appointments.service_id = services.id
-                WHERE appointments.start_time < DATE_ADD(?, INTERVAL ? MINUTE) AND DATE_ADD(appointments.start_time, INTERVAL services.duration MINUTE) > ?
+            // 3. MENTÉS AZ ADATBÁZISBA
+            const insertSql = `
+                INSERT INTO appointments (service_id, customer_name, customer_email, customer_phone, start_time, end_time, source) 
+                VALUES (?, ?, ?, ?, ?, DATE_ADD(?, INTERVAL ? MINUTE), ?)
             `;
-            db.query(apptCheckSql, [start_time, durationInMinutes, start_time], (err, apptResults) => {
-                if (err) return res.status(500).json({ message: "Adatbázis hiba." });
-                if (apptResults.length > 0) return res.status(400).json({ message: "Ez az időpont sajnos már foglalt!" });
 
-                // ÚJ: Az INSERT SQL-be bekerült a customer_email
-                const insertSql = `
-                    INSERT INTO appointments (service_id, customer_name, customer_email, customer_phone, start_time, end_time, source) 
-                    VALUES (?, ?, ?, ?, ?, DATE_ADD(?, INTERVAL ? MINUTE), ?)
-                `;
+            db.query(insertSql, [service_id, customer_name, customer_email, customer_phone, start_time, start_time, durationInMinutes, source], (err, result) => {
+                if (err) return res.status(500).json({ message: "Szerver hiba a mentéskor.", error: err.message });
 
-                // ÚJ: A tömbbe is bekerült a customer_email változó
-                // Mentés az adatbázisba
-                db.query(insertSql, [service_id, customer_name, customer_email, customer_phone, start_time, start_time, durationInMinutes, source], async (err, result) => {
-                    if (err) return res.status(500).json({ message: "Nem sikerült elmenteni a foglalást.", error: err.message });
+                // 4. VILLÁMGYORS EMAIL KÜLDÉS A HÁTTÉRBEN (Nincs await!)
+                // Csak akkor küldünk, ha van email ÉS online a foglalás
+                if (customer_email && source === 'online') {
+                    const formattedDate = new Date(start_time).toLocaleString('hu-HU', { 
+                        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                    });
                     
-                    // ÚJ: Ha van email cím megadva, küldjük ki a visszaigazolást!
-                    if (customer_email) {
-                        // Kicsit formázzuk a dátumot a magyar olvasatnak megfelelően
-                        const formattedDate = new Date(start_time).toLocaleString('hu-HU', { 
-                            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-                        });
-                        
-                        // Lekérjük a masszázs nevét, hogy bele tudjuk írni az emailbe
-                        const serviceName = serviceResults[0]?.name || "Masszázs";
+                    // Elindítjuk a küldést, de nem fagyasztjuk le a szervert
+                    sendEmail(customer_email, customer_name, formattedDate, serviceName, result.insertId)
+                        .catch(emailErr => console.error("Háttérben futó email hiba:", emailErr));
+                }
 
-                        // Meghívjuk a mi kis email küldő függvényünket
-                        await sendEmail(customer_email, customer_name, formattedDate, serviceName);
-                    }
-
-                    res.json({ message: "Sikeres foglalás!" });
-                });
+                // 5. AZONNALI VÁLASZ A WEBOLDALNAK
+                res.json({ message: "Sikeres foglalás!" });
             });
         });
     });
