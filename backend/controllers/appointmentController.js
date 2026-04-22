@@ -18,6 +18,21 @@ exports.createAppointment = (req, res) => {
         source = 'online'
     } = req.body;
 
+    // --- ÚJ RÉSZ: MAI ÉS HOLNAPI NAP BLOKKOLÁSA ONLINE FOGLALÁSNÁL ---
+    if (source === 'online') {
+        const bookingDate = new Date(start_time);
+        const today = new Date();
+        
+        // Kiszámoljuk a legkorábbi megengedett napot (Ma + 2 nap = Holnapután) éjféltől
+        const minAllowedDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2);
+        
+        if (bookingDate < minAllowedDate) {
+            return res.status(400).json({ 
+                message: "Online foglalás legkorábban holnaputánra lehetséges. Kérjük, válassz egy későbbi időpontot!" 
+            });
+        }
+    }
+
     const customer_email = req.body.customer_email && req.body.customer_email.trim() !== "" 
         ? req.body.customer_email 
         : null;

@@ -15,6 +15,11 @@ const [formData, setFormData] = useState({ name: '', email: '', phone: '', servi
   const [bookedSlots, setBookedSlots] = useState([]);
   const [selectedTime, setSelectedTime] = useState(null);
 
+  // Kiszámoljuk a "holnapután" dátumát a naptár korlátozásához
+// Kiszámoljuk a "holnapután" dátumát (Objektumként, ahogy a react-calendar szereti)
+  const today = new Date();
+  const minAllowedDateObj = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2);
+
   useEffect(() => {
     fetch('http://localhost:5001/api/services')
       .then(res => res.json())
@@ -194,11 +199,11 @@ const [formData, setFormData] = useState({ name: '', email: '', phone: '', servi
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
                 <div style={{ flex: '0 0 auto' }}>
                   <Calendar 
-                    onChange={setSelectedDate} 
-                    value={selectedDate} 
-                    minDate={new Date()} 
-                    tileDisabled={({ date }) => date.getDay() === 0 || date.getDay() === 6}
-                  />
+  onChange={setSelectedDate}
+  value={selectedDate} 
+  minDate={minAllowedDateObj} /* <-- ITT ADJUK ÁT AZ ÚJ, HOLNAPUTÁNI DÁTUMOT */
+  tileDisabled={({ date }) => date.getDay() === 0 || date.getDay() === 6}
+/>
                 </div>
                 <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
                   <h4 style={{ margin: '0 0 15px 0', color: '#7f8c8d' }}>Szabad sávok: {format(selectedDate, 'yyyy. MM. dd.')}</h4>
