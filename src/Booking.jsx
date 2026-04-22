@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Calendar from 'react-calendar'; 
 import 'react-calendar/dist/Calendar.css'; 
-import { format, parseISO, isBefore, addMinutes, startOfDay } from 'date-fns';
+import { format, isBefore, addMinutes } from 'date-fns';
 import './App.css';
 import logoImg from './assets/logo.png';
 
@@ -24,17 +24,20 @@ function Booking() {
 
   useEffect(() => {
     const formattedDate = format(selectedDate, 'yyyy-MM-dd'); 
-    
     fetch(`http://localhost:5001/api/appointments/${formattedDate}`)
       .then(res => res.json())
       .then(data => setBookedSlots(data))
       .catch(err => console.error("Hiba a napi foglalások letöltésekor:", err));
-      
     setSelectedTime(null); 
   }, [selectedDate]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const selectService = (id) => {
+    setFormData({ ...formData, serviceId: id });
+    setSelectedTime(null); // Ha váltunk szolgáltatást, az időpontot újra kell választani a hossza miatt
   };
 
   const generateTimeSlots = () => {
@@ -62,11 +65,9 @@ function Booking() {
       }
 
       const isPast = isBefore(slotStart, new Date());
-      
       if (!isBooked && !isPast && duration > 0) {
         slots.push(format(slotStart, 'HH:mm'));
       }
-      
       currentTime = addMinutes(currentTime, 30);
     }
     return slots;
@@ -105,123 +106,122 @@ function Booking() {
     })
     .catch(err => {
         console.error("Hiba:", err);
-        setMessage('❌ Hiba történt a foglalás során. Ellenőrizd az internetkapcsolatot!');
+        setMessage('❌ Hiba történt a foglalás során.');
     });
   };
 
   return (
-    <div className="booking-page" style={{ backgroundColor: '#f4f6f8', minHeight: '100vh' }}>
-      {/* Reszponzív Navbar */}
+    <div className="booking-page" style={{ backgroundColor: '#f4f6f8', minHeight: '100vh', paddingBottom: '50px' }}>
       <nav className="navbar" style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', backgroundColor: 'white', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-        <Link to="/" className="logo-link" style={{ textDecoration: 'none', color: '#2c3e50', display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+        <Link to="/" className="logo-link" style={{ textDecoration: 'none', color: '#2c3e50', display: 'flex', alignItems: 'center' }}>
           <img src={logoImg} alt="Emi Logo" className="logo-img" style={{ height: '40px', marginRight: '10px' }} />
           <span className="logo-text" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Massage</span>
         </Link>
         <Link to="/" className="nav-btn" style={{ textDecoration: 'none', backgroundColor: '#34495e', color: 'white', padding: '8px 15px', borderRadius: '5px', fontSize: '0.9rem' }}>Vissza a főoldalra</Link>
       </nav>
 
-      {/* Fő tartalom */}
-      <div className="booking-container" style={{ maxWidth: '1000px', margin: '40px auto', padding: '20px', display: 'flex', flexWrap: 'wrap', gap: '40px', justifyContent: 'center', boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: '1100px', margin: '30px auto', padding: '0 20px' }}>
+        <h1 style={{ textAlign: 'center', color: '#2c3e50', marginBottom: '40px' }}>Időpontfoglalás</h1>
         
-        {/* BAL OLDAL: Személyes adatok */}
-        <div style={{ flex: '1 1 300px', backgroundColor: 'white', padding: '25px', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
-          <h2 style={{ color: '#2c3e50', marginTop: 0, fontSize: '1.5rem', borderBottom: '2px solid #E67E22', paddingBottom: '10px' }}>1. Adataid és Szolgáltatás</h2>
+        {message && <div style={{ maxWidth: '600px', margin: '0 auto 20px auto', padding: '15px', backgroundColor: message.includes('❌') ? '#f8d7da' : '#d4edda', color: message.includes('❌') ? '#721c24' : '#155724', borderRadius: '10px', textAlign: 'center', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>{message}</div>}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
           
-          {message && <div style={{ padding: '15px', backgroundColor: message.includes('❌') ? '#f8d7da' : '#d4edda', color: message.includes('❌') ? '#721c24' : '#155724', borderRadius: '5px', marginBottom: '20px', fontWeight: 'bold' }}>{message}</div>}
-
-          <form id="bookingForm" onSubmit={handleSubmit} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            <div className="form-group">
-              <label style={{ fontWeight: 'bold', color: '#34495e', marginBottom: '5px', display: 'block' }}>Teljes név:</label>
-              <input type="text" name="name" value={formData.name} onChange={handleInputChange} required style={{ width: '100%', padding: '12px', borderRadius: '5px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '1rem' }} />
+          {/* 1. SZOLGÁLTATÁS VÁLASZTÁS KÁRTYÁKKAL */}
+          <section style={{ backgroundColor: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <h2 style={{ color: '#2c3e50', fontSize: '1.4rem', marginBottom: '20px', borderLeft: '5px solid #E67E22', paddingLeft: '15px' }}>1. Válaszd ki a szolgáltatást</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
+              {services.map(s => (
+                <div 
+                  key={s.id} 
+                  onClick={() => selectService(s.id)}
+                  style={{ 
+                    padding: '20px', 
+                    borderRadius: '12px', 
+                    border: formData.serviceId === s.id ? '3px solid #E67E22' : '1px solid #eee',
+                    backgroundColor: formData.serviceId === s.id ? '#fff9f2' : '#fff',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    position: 'relative',
+                    boxShadow: formData.serviceId === s.id ? '0 5px 15px rgba(230, 126, 34, 0.15)' : 'none'
+                  }}
+                >
+                  {formData.serviceId === s.id && <div style={{ position: 'absolute', top: '10px', right: '10px', color: '#E67E22', fontWeight: 'bold' }}>✓</div>}
+                  <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#2c3e50' }}>{s.name}</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>🕒 {s.duration} perc</span>
+                    <span style={{ color: '#27ae60', fontWeight: 'bold', fontSize: '1.1rem' }}>{s.price} Ft</span>
+                  </div>
+                </div>
+              ))}
             </div>
+          </section>
 
-            <div className="form-group">
-              <label style={{ fontWeight: 'bold', color: '#34495e', marginBottom: '5px', display: 'block' }}>Telefonszám:</label>
-              <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required style={{ width: '100%', padding: '12px', borderRadius: '5px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '1rem' }} />
-            </div>
-
-            <div className="form-group">
-              <label style={{ fontWeight: 'bold', color: '#34495e', marginBottom: '5px', display: 'block' }}>Választott masszázs:</label>
-              <select name="serviceId" value={formData.serviceId} onChange={handleInputChange} required style={{ width: '100%', padding: '12px', borderRadius: '5px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '1rem', backgroundColor: 'white' }}>
-                <option value="">Válassz szolgáltatást...</option>
-                {services.map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.duration} perc) - {s.price} Ft</option>
-                ))}
-              </select>
-            </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '30px' }}>
             
-            <button type="submit" disabled={!selectedTime} className="cta-button" style={{ 
-                width: '100%', padding: '15px', marginTop: '10px', backgroundColor: '#E67E22', color: 'white', 
-                border: 'none', borderRadius: '5px', cursor: selectedTime ? 'pointer' : 'not-allowed', 
-                fontWeight: 'bold', fontSize: '1.1rem', boxSizing: 'border-box', transition: 'all 0.3s',
-                opacity: selectedTime ? 1 : 0.5 
-              }}>
-              {selectedTime ? `Foglalás véglegesítése ${selectedTime}-ra` : 'Válassz időpontot a naptárból'}
-            </button>
-          </form>
-        </div>
+            {/* 2. ADATOK ÉS FOGLALÁS */}
+            <section style={{ flex: '1 1 350px', backgroundColor: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+              <h2 style={{ color: '#2c3e50', fontSize: '1.4rem', marginBottom: '20px', borderLeft: '5px solid #3498db', paddingLeft: '15px' }}>2. Adataid</h2>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#34495e' }}>Teljes név</label>
+                  <input type="text" name="name" value={formData.name} onChange={handleInputChange} required placeholder="Minta Aladár" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#34495e' }}>Telefonszám</label>
+                  <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required placeholder="+36 30 123 4567" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                </div>
+                <button type="submit" disabled={!selectedTime || !formData.serviceId} style={{ 
+                  marginTop: '10px', width: '100%', padding: '15px', backgroundColor: '#E67E22', color: 'white', 
+                  border: 'none', borderRadius: '8px', cursor: (selectedTime && formData.serviceId) ? 'pointer' : 'not-allowed', 
+                  fontWeight: 'bold', fontSize: '1.1rem', opacity: (selectedTime && formData.serviceId) ? 1 : 0.5 
+                }}>
+                  {selectedTime ? `Foglalás: ${selectedTime}` : 'Válassz időpontot!'}
+                </button>
+              </form>
+            </section>
 
-        {/* JOBB OLDAL: Naptár és Időpontok */}
-        <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'white', padding: '25px', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
-          <h2 style={{ color: '#2c3e50', marginTop: 0, fontSize: '1.5rem', width: '100%', borderBottom: '2px solid #3498db', paddingBottom: '10px', textAlign: 'left' }}>2. Dátum és Időpont</h2>
-          
-          {/* Naptár tároló - a 100% szélesség miatt mobilon is befér */}
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-            <div style={{ boxShadow: '0 2px 10px rgba(0,0,0,0.05)', borderRadius: '10px', overflow: 'hidden', width: '100%', maxWidth: '350px' }}>
-              <Calendar 
-                onChange={setSelectedDate} 
-                value={selectedDate} 
-                minDate={new Date()} 
-                tileDisabled={({ date }) => date.getDay() === 0 || date.getDay() === 6} // Hétvégék kikapcsolva
-              />
-            </div>
-          </div>
-
-          {/* Időpont Gombok */}
-          <div style={{ width: '100%', textAlign: 'center' }}>
-            <h3 style={{ marginBottom: '15px', fontSize: '1.2rem', color: '#34495e' }}>
-              Szabad időpontok ekkor: {format(selectedDate, 'yyyy. MM. dd.')}
-            </h3>
-            
-            {!formData.serviceId ? (
-               <div style={{ backgroundColor: '#fff3cd', padding: '15px', borderRadius: '5px', borderLeft: '5px solid #f39c12' }}>
-                   <p style={{ color: '#e67e22', fontWeight: 'bold', margin: 0 }}>Kérlek előbb válassz masszázst a bal oldalon!</p>
-               </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '10px', width: '100%' }}>
-                {generateTimeSlots().length > 0 ? (
-                  generateTimeSlots().map(time => (
-                    <button 
-                      key={time} 
-                      type="button"
-                      onClick={() => setSelectedTime(time)}
-                      style={{ 
-                        padding: '12px 5px', 
-                        border: selectedTime === time ? '2px solid #E67E22' : '1px solid #ccc',
-                        backgroundColor: selectedTime === time ? '#FFF5E6' : 'white',
-                        color: selectedTime === time ? '#E67E22' : '#333',
-                        borderRadius: '5px',
-                        cursor: 'pointer',
-                        fontWeight: selectedTime === time ? 'bold' : 'normal',
-                        fontSize: '1rem',
-                        transition: 'all 0.2s',
-                        boxSizing: 'border-box',
-                        width: '100%'
-                      }}
-                    >
-                      {time}
-                    </button>
-                  ))
-                ) : (
-                  <p style={{ gridColumn: '1 / -1', color: '#e74c3c', fontWeight: 'bold', padding: '10px', backgroundColor: '#fdfaef', borderRadius: '5px' }}>
-                    Sajnos erre a napra már nincs szabad időpontunk.
-                  </p>
-                )}
+            {/* 3. NAPTÁR ÉS IDŐPONTOK */}
+            <section style={{ flex: '2 1 450px', backgroundColor: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', textAlign: 'center' }}>
+              <h2 style={{ color: '#2c3e50', fontSize: '1.4rem', marginBottom: '20px', borderLeft: '5px solid #27ae60', paddingLeft: '15px', textAlign: 'left' }}>3. Időpont választás</h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
+                <div style={{ flex: '0 0 auto' }}>
+                  <Calendar 
+                    onChange={setSelectedDate} 
+                    value={selectedDate} 
+                    minDate={new Date()} 
+                    tileDisabled={({ date }) => date.getDay() === 0 || date.getDay() === 6}
+                  />
+                </div>
+                <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
+                  <h4 style={{ margin: '0 0 15px 0', color: '#7f8c8d' }}>Szabad sávok: {format(selectedDate, 'yyyy. MM. dd.')}</h4>
+                  {!formData.serviceId ? (
+                    <div style={{ padding: '20px', color: '#e67e22', fontWeight: 'bold' }}>Válassz masszázst felül!</div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '8px' }}>
+                      {generateTimeSlots().map(time => (
+                        <button 
+                          key={time} 
+                          onClick={() => setSelectedTime(time)}
+                          style={{ 
+                            padding: '10px 5px', border: selectedTime === time ? '2px solid #E67E22' : '1px solid #eee',
+                            backgroundColor: selectedTime === time ? '#FFF5E6' : 'white',
+                            color: selectedTime === time ? '#E67E22' : '#333',
+                            borderRadius: '6px', cursor: 'pointer', transition: '0.2s'
+                          }}
+                        >
+                          {time}
+                        </button>
+                      ))}
+                      {generateTimeSlots().length === 0 && <p style={{ color: '#e74c3c', fontSize: '0.9rem' }}>Nincs szabad hely.</p>}
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+            </section>
+
           </div>
         </div>
-
       </div>
     </div>
   );

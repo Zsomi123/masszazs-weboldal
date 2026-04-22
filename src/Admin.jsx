@@ -313,14 +313,79 @@ function Admin() {
         )}
 
         {/* KIVÁLASZTOTT FOGLALÁS TÖRLÉSE */}
+        {/* UPGRADELT INFORMÁCIÓS PANEL */}
         {selectedAppt && (
-            <div style={{ backgroundColor: '#fff3cd', padding: '15px', borderRadius: '8px', marginBottom: '20px', borderLeft: '5px solid #f39c12', display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ flex: '1 1 250px' }}>
-                    <strong>Kiválasztott foglalás: </strong><br/>
-                    {selectedAppt.customer_name} ({selectedAppt.customer_phone})<br/>
-                    <span style={{ color: '#E67E22', fontWeight: 'bold' }}>🕒 {format(new Date(selectedAppt.start_time), 'yyyy.MM.dd. HH:mm')} - {selectedAppt.service_name}</span>
+            <div style={{ 
+                backgroundColor: 'white', 
+                padding: '25px', 
+                borderRadius: '12px', 
+                marginBottom: '25px', 
+                // A csík színe igazodik a foglalás típusához
+                borderLeft: `10px solid ${selectedAppt.source === 'admin' ? '#3498db' : '#27ae60'}`, 
+                boxShadow: '0 8px 20px rgba(0,0,0,0.1)', 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '20px', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                animation: 'fadeIn 0.3s ease-in-out'
+            }}>
+                <div style={{ flex: '1 1 350px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
+                        {/* Jelvény a forrásnak */}
+                        <span style={{ 
+                            backgroundColor: selectedAppt.source === 'admin' ? '#ebf5fb' : '#eafaf1', 
+                            color: selectedAppt.source === 'admin' ? '#3498db' : '#27ae60', 
+                            padding: '5px 12px', 
+                            borderRadius: '20px', 
+                            fontSize: '0.75rem', 
+                            fontWeight: 'bold', 
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            border: `1px solid ${selectedAppt.source === 'admin' ? '#d6eaf8' : '#d4efdf'}`
+                        }}>
+                            {selectedAppt.source === 'admin' ? '👤 Admin rögzítette' : '🌐 Online foglalás'}
+                        </span>
+                        <h2 style={{ margin: 0, color: '#2c3e50', fontSize: '1.4rem' }}>{selectedAppt.customer_name}</h2>
+                    </div>
+                    
+                    {/* Részletes adatok rácsos elrendezésben */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '10px 20px', fontSize: '1rem' }}>
+                        <span style={{ color: '#7f8c8d' }}>📞 Telefonszám:</span>
+                        <span style={{ fontWeight: '600', color: '#2c3e50' }}>{selectedAppt.customer_phone}</span>
+                        
+                        <span style={{ color: '#7f8c8d' }}>💆‍♀️ Szolgáltatás:</span>
+                        <span style={{ fontWeight: '600', color: '#2c3e50' }}>{selectedAppt.service_name} ({selectedAppt.duration} perc)</span>
+                        
+                        <span style={{ color: '#7f8c8d' }}>🕒 Időintervallum:</span>
+                        <span style={{ color: '#E67E22', fontWeight: 'bold' }}>
+                            {format(new Date(selectedAppt.start_time), 'yyyy. MMMM dd. ', { locale: hu })} 
+                            <span style={{ backgroundColor: '#fef5e7', padding: '2px 6px', borderRadius: '4px' }}>
+                                {format(new Date(selectedAppt.start_time), 'HH:mm')} - {format(new Date(selectedAppt.end_time), 'HH:mm')}
+                            </span>
+                        </span>
+                    </div>
                 </div>
-                <button onClick={() => handleDeleteAppt(selectedAppt.id)} style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', flex: '0 0 auto' }}>🗑️ Törlés</button>
+                
+                {/* Műveleti gombok */}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <button 
+                        onClick={() => setSelectedAppt(null)} 
+                        style={{ backgroundColor: '#ecf0f1', color: '#7f8c8d', border: 'none', padding: '12px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}
+                        onMouseOver={(e) => e.target.style.backgroundColor = '#d5dbdb'}
+                        onMouseOut={(e) => e.target.style.backgroundColor = '#ecf0f1'}
+                    >
+                        Bezárás
+                    </button>
+                    <button 
+                        onClick={() => handleDeleteAppt(selectedAppt.id)} 
+                        style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '12px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(231, 76, 60, 0.2)', transition: '0.2s' }}
+                        onMouseOver={(e) => e.target.style.backgroundColor = '#c0392b'}
+                        onMouseOut={(e) => e.target.style.backgroundColor = '#e74c3c'}
+                    >
+                        🗑️ Foglalás törlése
+                    </button>
+                </div>
             </div>
         )}
 
