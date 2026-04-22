@@ -15,13 +15,13 @@ const sendEmail = async (toEmail, customerName, date, serviceName, appointmentId
         const transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
             port: 587,
-            secure: false, 
+            secure: false, // TLS használata
             auth: {
-                user: 'info.emimassage@gmail.com', // Fixen beírva
-                pass: 'tkiu kmft czof xpsn'        // Fixen beírva
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
             },
             tls: {
-                rejectUnauthorized: false 
+                rejectUnauthorized: false // Fejlesztői környezetben segít a kapcsolódásban
             }
         });
 

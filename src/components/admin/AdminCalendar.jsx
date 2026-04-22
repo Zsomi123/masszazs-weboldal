@@ -83,7 +83,15 @@ function AdminCalendar({ services }) {
 
   const handleAdminAddAppt = (e) => {
     e.preventDefault();
+    
+    // Összerakjuk a dátumot és időt
     const start_time = `${newAdminAppt.date} ${newAdminAppt.time}:00`;
+
+    const dataToSend = {
+        ...newAdminAppt,
+        start_time,
+        source: 'admin' // Jelezzük a szervernek, hogy ez az admin felületről jön
+    };
 
     // URL: /api/appointments (POST)
     fetch('http://localhost:5001/api/appointments', {
@@ -165,22 +173,37 @@ function AdminCalendar({ services }) {
       </div>
 
       {/* ÚJ FOGLALÁS ŰRLAP */}
-      {showAddForm && (
-          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', marginBottom: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', borderLeft: '5px solid #27ae60' }}>
-              <h3 style={{ marginTop: 0 }}>Új időpont rögzítése</h3>
-              <form onSubmit={handleAdminAddAppt} style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
-                  <input type="date" value={newAdminAppt.date} onChange={e => setNewAdminAppt({...newAdminAppt, date: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 150px' }} />
-                  <input type="time" value={newAdminAppt.time} onChange={e => setNewAdminAppt({...newAdminAppt, time: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 100px' }} />
-                  <select value={newAdminAppt.service_id} onChange={e => setNewAdminAppt({...newAdminAppt, service_id: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 200px' }}>
-                      {services.map(s => <option key={s.id} value={s.id}>{s.name} ({s.duration} perc)</option>)}
-                  </select>
-                  <input type="text" placeholder="Vendég neve" value={newAdminAppt.customer_name} onChange={e => setNewAdminAppt({...newAdminAppt, customer_name: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 200px' }} />
-                  <input type="email" placeholder="Email cím" value={newAdminAppt.customer_email} onChange={e => setNewAdminAppt({...newAdminAppt, customer_email: e.target.value})} style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 200px' }} />
-                  <input type="text" placeholder="Telefonszám" value={newAdminAppt.customer_phone} onChange={e => setNewAdminAppt({...newAdminAppt, customer_phone: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 150px' }} />
-                  <button type="submit" style={{ width: '100%', backgroundColor: '#27ae60', color: 'white', border: 'none', padding: '12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Mentés</button>
-              </form>
-          </div>
-      )}
+{showAddForm && (
+    <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', marginBottom: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', borderLeft: '5px solid #27ae60' }}>
+        <h3 style={{ marginTop: 0 }}>Új időpont rögzítése</h3>
+        <form onSubmit={handleAdminAddAppt} style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
+            <input type="date" value={newAdminAppt.date} onChange={e => setNewAdminAppt({...newAdminAppt, date: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 150px' }} />
+            <input type="time" value={newAdminAppt.time} onChange={e => setNewAdminAppt({...newAdminAppt, time: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 100px' }} />
+            <select value={newAdminAppt.service_id} onChange={e => setNewAdminAppt({...newAdminAppt, service_id: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 200px' }}>
+                {services.map(s => <option key={s.id} value={s.id}>{s.name} ({s.duration} perc)</option>)}
+            </select>
+            <input type="text" placeholder="Vendég neve" value={newAdminAppt.customer_name} onChange={e => setNewAdminAppt({...newAdminAppt, customer_name: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 200px' }} />
+            <input type="email" placeholder="Email cím (opcionális)" value={newAdminAppt.customer_email} onChange={e => setNewAdminAppt({...newAdminAppt, customer_email: e.target.value})} style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 200px' }} />
+            <input type="text" placeholder="Telefonszám" value={newAdminAppt.customer_phone} onChange={e => setNewAdminAppt({...newAdminAppt, customer_phone: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 150px' }} />
+            
+            {/* ÚJ RÉSZ: Checkbox az email küldéshez */}
+            <div style={{ display: 'flex', alignItems: 'center', flex: '1 1 100%', gap: '10px', marginTop: '5px', marginBottom: '5px' }}>
+                <input 
+                    type="checkbox" 
+                    id="sendEmailCheckbox"
+                    checked={newAdminAppt.send_email || false} 
+                    onChange={e => setNewAdminAppt({...newAdminAppt, send_email: e.target.checked})} 
+                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                />
+                <label htmlFor="sendEmailCheckbox" style={{ cursor: 'pointer', fontWeight: 'bold', color: '#2c3e50' }}>
+                    Visszaigazoló email küldése a vendégnek
+                </label>
+            </div>
+
+            <button type="submit" style={{ width: '100%', backgroundColor: '#27ae60', color: 'white', border: 'none', padding: '12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Mentés</button>
+        </form>
+    </div>
+)}
 
       {/* BLOKKOLÁS ŰRLAP */}
       {showBlockForm && (
