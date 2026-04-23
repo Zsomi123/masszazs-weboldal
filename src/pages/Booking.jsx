@@ -48,14 +48,16 @@ const [formData, setFormData] = useState({ name: '', email: '', phone: '', servi
   const generateTimeSlots = () => {
     const slots = [];
     let currentTime = new Date(selectedDate);
-    currentTime.setHours(8, 0, 0, 0); 
+    currentTime.setHours(8, 0, 0, 0); // Kezdés reggel 8:00-kor
+    
     const endTime = new Date(selectedDate);
-    endTime.setHours(18, 0, 0, 0); 
+    endTime.setHours(18, 0, 0, 0); // Befejezés 18:00-kor
 
     const selectedService = services.find(s => s.id === parseInt(formData.serviceId));
     const duration = selectedService ? selectedService.duration : 0;
 
-    while (currentTime < endTime) {
+    // A "currentTime <= endTime" biztosítja, hogy a 18:00 is bekerüljön a listába
+    while (currentTime <= endTime) {
       const slotStart = new Date(currentTime);
       const slotEnd = addMinutes(slotStart, duration);
       
@@ -63,6 +65,8 @@ const [formData, setFormData] = useState({ name: '', email: '', phone: '', servi
       for (let booking of bookedSlots) {
         const bookingStart = new Date(booking.start_time);
         const bookingEnd = new Date(booking.end_time);
+        
+        // Ütközésvizsgálat
         if (slotStart < bookingEnd && slotEnd > bookingStart) {
           isBooked = true;
           break;
@@ -70,10 +74,14 @@ const [formData, setFormData] = useState({ name: '', email: '', phone: '', servi
       }
 
       const isPast = isBefore(slotStart, new Date());
+      
+      // Csak akkor adjuk hozzá, ha nem foglalt, nem múlt el, és van választott szolgáltatás
       if (!isBooked && !isPast && duration > 0) {
         slots.push(format(slotStart, 'HH:mm'));
       }
-      currentTime = addMinutes(currentTime, 30);
+
+      // LÉPÉSKÖZ MÓDOSÍTÁSA: 30-ról 60 percre (így csak egész órák lesznek)
+      currentTime = addMinutes(currentTime, 60);
     }
     return slots;
   };

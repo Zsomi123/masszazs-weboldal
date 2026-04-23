@@ -186,20 +186,6 @@ function AdminCalendar({ services }) {
             <input type="email" placeholder="Email cím (opcionális)" value={newAdminAppt.customer_email} onChange={e => setNewAdminAppt({...newAdminAppt, customer_email: e.target.value})} style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 200px' }} />
             <input type="text" placeholder="Telefonszám" value={newAdminAppt.customer_phone} onChange={e => setNewAdminAppt({...newAdminAppt, customer_phone: e.target.value})} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', flex: '1 1 150px' }} />
             
-            {/* ÚJ RÉSZ: Checkbox az email küldéshez */}
-            <div style={{ display: 'flex', alignItems: 'center', flex: '1 1 100%', gap: '10px', marginTop: '5px', marginBottom: '5px' }}>
-                <input 
-                    type="checkbox" 
-                    id="sendEmailCheckbox"
-                    checked={newAdminAppt.send_email || false} 
-                    onChange={e => setNewAdminAppt({...newAdminAppt, send_email: e.target.checked})} 
-                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                />
-                <label htmlFor="sendEmailCheckbox" style={{ cursor: 'pointer', fontWeight: 'bold', color: '#2c3e50' }}>
-                    Visszaigazoló email küldése a vendégnek
-                </label>
-            </div>
-
             <button type="submit" style={{ width: '100%', backgroundColor: '#27ae60', color: 'white', border: 'none', padding: '12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Mentés</button>
         </form>
     </div>
