@@ -2,74 +2,67 @@
 .contact {
   background: linear-gradient(135deg, var(--text-main) 0%, #1A252F 100%);
   color: var(--white);
-  padding: 100px 5% 30px;
+  padding: 80px 5% 30px;
   border-top: 5px solid var(--primary);
 }
 
 .contact-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 50px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Automata oszlopok */
+  gap: 40px;
   max-width: 1200px;
-  margin: 0 auto 80px auto;
+  margin: 0 auto 60px auto;
 }
 
-.contact-info, .opening-hours {
-  flex: 1;
-  min-width: 300px;
-}
-
-.contact-info h2 {
-  font-size: 2.5rem;
-  margin-bottom: 25px;
+.contact-column h2, .contact-column h3 {
+  color: var(--white);
+  margin-bottom: 20px;
 }
 
 .contact-info p {
   color: #CBD5E1;
-  margin-bottom: 30px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   line-height: 1.6;
 }
 
 .info-items p {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 20px;
-  font-size: 1.1rem;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.info-items a {
   color: var(--white);
+  text-decoration: none;
+  transition: color 0.3s;
 }
 
-.info-items span {
-  font-size: 1.4rem;
+.info-items a:hover {
+  color: var(--primary-light);
 }
 
+/* Nyitvatartás kártya stílus */
 .opening-hours {
   background: rgba(255, 255, 255, 0.03);
-  padding: 40px;
-  border-radius: 20px;
+  padding: 25px;
+  border-radius: 15px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(5px);
-}
-
-.opening-hours h3 {
-  font-size: 1.8rem;
-  margin-bottom: 25px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 15px;
 }
 
 .opening-hours ul {
   list-style: none;
+  padding: 0;
 }
 
 .opening-hours li {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   color: #E2E8F0;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 8px;
 }
 
 .opening-hours span {
@@ -77,10 +70,39 @@
   font-weight: 500;
 }
 
+/* Térkép stílus */
+.contact-map h3 {
+  margin-bottom: 15px;
+}
+
+.map-responsive {
+  overflow: hidden;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  line-height: 0; /* Megszünteti a felesleges alsó hézagot */
+}
+
 .footer-bottom {
   text-align: center;
   padding-top: 25px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   color: #94A3B8;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+}
+
+/* Mobilos finomítás */
+@media (max-width: 768px) {
+  .contact {
+    padding-top: 50px;
+  }
+  .contact-container {
+    gap: 30px;
+    text-align: center;
+  }
+  .info-items p {
+    justify-content: center;
+  }
+  .opening-hours li {
+    font-size: 0.9rem;
+  }
 }

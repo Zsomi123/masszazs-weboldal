@@ -81,20 +81,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Galéria szekció */}
-      <section id="galeria" style={{ padding: '100px 5%', textAlign: 'center', backgroundColor: '#fff' }}>
-        <h2>Galéria</h2>
-        <div className="divider center"></div>
-        <p style={{ color: '#7f8c8d', marginBottom: '40px', fontSize: '1.1rem' }}>
-          Tekints be a szalon nyugtató és harmonikus környezetébe.
-        </p>
-        
-        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <div style={{ width: '300px', height: '250px', backgroundColor: '#f4f6f8', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bdc3c7', fontWeight: 'bold' }}>Kép 1 helye</div>
-          <div style={{ width: '300px', height: '250px', backgroundColor: '#f4f6f8', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bdc3c7', fontWeight: 'bold' }}>Kép 2 helye</div>
-          <div style={{ width: '300px', height: '250px', backgroundColor: '#f4f6f8', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bdc3c7', fontWeight: 'bold' }}>Kép 3 helye</div>
-        </div>
-      </section>
+      
 
       <Footer />
     </>
