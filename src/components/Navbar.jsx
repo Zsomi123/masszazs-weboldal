@@ -44,26 +44,19 @@ function Navbar() {
 
       <div className={`menu-overlay ${isMenuOpen ? 'active' : ''}`} onClick={closeMenu}></div>
 
-      
-
       {/* MENÜPONTOK */}
       <ul className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
         <li><a href="/#kezdolap" onClick={closeMenu}>Kezdőlap</a></li>
         <li><a href="/#rolam" onClick={closeMenu}>Rólam</a></li>
         <li><a href="/#szolgaltatasok" onClick={closeMenu}>Szolgáltatások</a></li>
-        {/* ÚJ: Galéria menüpont beillesztése */}
-        <li><a href="/#galeria" onClick={closeMenu}>Galéria</a></li> 
         <li><a href="/#kapcsolat" onClick={closeMenu}>Kapcsolat</a></li>
         
-        {/* MOBIL GOMB */}
         <li className="mobile-only">
           <Link to="/foglalas" className="nav-btn mobile-btn" onClick={closeMenu}>
             Időpontot kérek
           </Link>
         </li>
       </ul>
-
-
       
       <Link to="/foglalas" className="nav-btn desktop-only">
         Időpontot kérek
