@@ -1,0 +1,234 @@
+/* --- ADMIN NAPTÁR FEJLÉC ÉS GOMBOK --- */
+.admin-calendar-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.admin-title {
+  color: var(--text-main);
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-action {
+  flex: 1;
+  padding: 10px;
+  border-radius: 5px;
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-action:hover { opacity: 0.9; }
+.btn-primary { background-color: #3498db; }
+.btn-secondary { background-color: #7f8c8d; }
+
+/* Naptár léptető (Ma, előző/következő hét) */
+.calendar-controls {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  background-color: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  align-items: center;
+}
+
+.btn-nav {
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-nav:hover { background-color: #f4f6f8; }
+
+.btn-today {
+  padding: 8px 15px;
+  border-radius: 5px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.week-label {
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+/* --- ŰRLAPOK (Kártyák) --- */
+.admin-form-card {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.card-appt { border-left: 5px solid #27ae60; }
+.card-block { border-left: 5px solid #7f8c8d; }
+
+.admin-form-card h3 {
+  margin-top: 0;
+  color: var(--text-main);
+}
+
+.admin-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+}
+
+.admin-input {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  flex: 1 1 150px;
+}
+
+.btn-submit-appt {
+  width: 100%;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-submit-block {
+  padding: 10px 20px;
+  background-color: #7f8c8d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* --- KIJELÖLT FOGLALÁS RÉSZLETEI --- */
+.selected-appt-card {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.selected-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.selected-details h2 { margin: 0 0 10px 0; color: var(--text-main); }
+.selected-details p { margin: 5px 0; color: var(--text-light); }
+.selected-time { font-weight: bold; color: var(--primary) !important; }
+
+.selected-actions { display: flex; gap: 10px; }
+.btn-close { padding: 8px 15px; border-radius: 5px; border: 1px solid #ccc; background: white; cursor: pointer; }
+.btn-delete { padding: 8px 15px; background-color: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; }
+
+/* --- NAPTÁR RÁCS --- */
+.calendar-wrapper { overflow-x: auto; }
+
+.calendar-grid {
+  min-width: 800px;
+  background-color: white;
+  display: flex;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.time-sidebar {
+  width: 60px;
+  background-color: #f9f9f9;
+  border-right: 1px solid #ddd;
+}
+
+.time-header-spacer { height: 50px; }
+
+.time-label {
+  height: 60px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.75rem;
+  text-align: center;
+  color: #999;
+  padding-top: 5px;
+}
+
+.day-column {
+  flex: 1;
+  border-right: 1px solid #eee;
+  position: relative;
+}
+
+.day-header {
+  height: 50px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: white;
+}
+
+.day-header.today { background-color: #e8f4fd; }
+
+.day-name { font-size: 0.7rem; color: #999; }
+.day-number { font-weight: bold; color: var(--text-main); }
+
+.grid-cell {
+  height: 60px;
+  border-bottom: 1px solid #fafafa;
+}
+
+/* --- ESEMÉNYEK A NAPTÁRBAN --- */
+.block-event {
+  background: repeating-linear-gradient(45deg, #eee, #eee 10px, #ddd 10px, #ddd 20px);
+  opacity: 0.7;
+  z-index: 5;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.block-text {
+  font-size: 0.6rem;
+  font-weight: bold;
+  color: #555;
+}
+
+.appt-event {
+  color: white;
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  z-index: 10;
+  border: 1px solid rgba(0,0,0,0.1);
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.appt-admin { background-color: #3498db; }
+.appt-online { background-color: #27ae60; }

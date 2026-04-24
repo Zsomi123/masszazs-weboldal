@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import './AdminServices.css'; // <-- CSS IMPORTÁLÁSA
 
 function AdminServices({ services, fetchServices }) {
   const [newService, setNewService] = useState({ name: '', duration: '', price: '' });
@@ -16,7 +17,7 @@ function AdminServices({ services, fetchServices }) {
     .then(data => { 
       if (data.success) { 
         setNewService({ name: '', duration: '', price: '' }); 
-        fetchServices(); // Szólunk a szülőnek, hogy frissítse a listát
+        fetchServices();
       }
     });
   };
@@ -57,37 +58,55 @@ function AdminServices({ services, fetchServices }) {
 
   return (
     <>
-      <h1 style={{ marginTop: '40px', marginBottom: '20px', color: '#2c3e50', borderTop: '2px solid #ccc', paddingTop: '20px', fontSize: '1.5rem' }}>💆‍♀️ Szolgáltatások</h1>
+      <h1 className="services-title">💆‍♀️ Szolgáltatások</h1>
       
-      <form onSubmit={handleAddService} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', backgroundColor: 'white', padding: '15px', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-          <input type="text" placeholder="Masszázs neve" value={newService.name} onChange={e => setNewService({...newService, name: e.target.value})} required style={{flex: '1 1 200px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px'}} />
-          <input type="number" placeholder="Perc" value={newService.duration} onChange={e => setNewService({...newService, duration: e.target.value})} required style={{flex: '1 1 80px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px'}} />
-          <input type="number" placeholder="Ár (Ft)" value={newService.price} onChange={e => setNewService({...newService, price: e.target.value})} required style={{flex: '1 1 100px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px'}} />
-          <button type="submit" style={{ flex: '1 1 100%', backgroundColor: '#27ae60', color: 'white', border: 'none', padding: '12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>+ Új hozzáadása</button>
+      <form onSubmit={handleAddService} className="services-form">
+          <input type="text" placeholder="Masszázs neve" value={newService.name} onChange={e => setNewService({...newService, name: e.target.value})} required className="service-input input-name" />
+          <input type="number" placeholder="Perc" value={newService.duration} onChange={e => setNewService({...newService, duration: e.target.value})} required className="service-input input-duration" />
+          <input type="number" placeholder="Ár (Ft)" value={newService.price} onChange={e => setNewService({...newService, price: e.target.value})} required className="service-input input-price" />
+          <button type="submit" className="btn-add-service">+ Új hozzáadása</button>
       </form>
 
-      <div style={{ width: '100%', overflowX: 'auto', paddingBottom: '20px' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', minWidth: '600px', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+      <div className="table-wrapper">
+          <div className="table-card">
+            <table className="services-table">
               <thead>
-                <tr style={{ backgroundColor: '#34495e', color: 'white' }}>
-                  <th style={{ padding: '15px' }}>Név</th>
-                  <th style={{ padding: '15px' }}>Időtartam</th>
-                  <th style={{ padding: '15px' }}>Ár</th>
-                  <th style={{ padding: '15px', textAlign: 'center' }}>Műveletek</th>
+                <tr className="table-header-row">
+                  <th>Név</th>
+                  <th>Időtartam</th>
+                  <th>Ár</th>
+                  <th className="th-actions">Műveletek</th>
                 </tr>
               </thead>
               <tbody>
                 {services.map((s) => (
-                  <tr key={s.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '15px', fontWeight: 'bold' }}>{editServiceId === s.id ? <input type="text" value={editServiceData.name} onChange={e => setEditServiceData({...editServiceData, name: e.target.value})} style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }} /> : s.name}</td>
-                    <td style={{ padding: '15px' }}>{editServiceId === s.id ? <input type="number" value={editServiceData.duration} onChange={e => setEditServiceData({...editServiceData, duration: e.target.value})} style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }} /> : `${s.duration} perc`}</td>
-                    <td style={{ padding: '15px', color: '#27ae60', fontWeight: 'bold' }}>{editServiceId === s.id ? <input type="number" value={editServiceData.price} onChange={e => setEditServiceData({...editServiceData, price: e.target.value})} style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }} /> : `${s.price} Ft`}</td>
-                    <td style={{ padding: '15px', textAlign: 'center', display: 'flex', gap: '5px', justifyContent: 'center' }}>
+                  <tr key={s.id}>
+                    <td className="td-name">
+                      {editServiceId === s.id ? 
+                        <input type="text" value={editServiceData.name} onChange={e => setEditServiceData({...editServiceData, name: e.target.value})} className="edit-input" /> 
+                        : s.name}
+                    </td>
+                    <td>
+                      {editServiceId === s.id ? 
+                        <input type="number" value={editServiceData.duration} onChange={e => setEditServiceData({...editServiceData, duration: e.target.value})} className="edit-input" /> 
+                        : `${s.duration} perc`}
+                    </td>
+                    <td className="td-price">
+                      {editServiceId === s.id ? 
+                        <input type="number" value={editServiceData.price} onChange={e => setEditServiceData({...editServiceData, price: e.target.value})} className="edit-input" /> 
+                        : `${s.price} Ft`}
+                    </td>
+                    <td className="td-actions">
                        {editServiceId === s.id ? (
-                          <><button onClick={() => handleSaveService(s.id)} style={{ backgroundColor: '#2ecc71', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Ment</button><button onClick={() => setEditServiceId(null)} style={{ backgroundColor: '#95a5a6', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>X</button></>
+                          <>
+                            <button onClick={() => handleSaveService(s.id)} className="btn-table btn-save">Ment</button>
+                            <button onClick={() => setEditServiceId(null)} className="btn-table btn-cancel">X</button>
+                          </>
                         ) : (
-                          <><button onClick={() => handleEditServiceClick(s)} style={{ backgroundColor: '#f39c12', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Szerkeszt</button><button onClick={() => handleDeleteService(s.id)} style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Töröl</button></>
+                          <>
+                            <button onClick={() => handleEditServiceClick(s)} className="btn-table btn-edit">Szerkeszt</button>
+                            <button onClick={() => handleDeleteService(s.id)} className="btn-table btn-delete">Töröl</button>
+                          </>
                         )}
                     </td>
                   </tr>

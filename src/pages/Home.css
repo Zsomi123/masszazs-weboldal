@@ -1,0 +1,194 @@
+/* --- 1. HERO SZEKCIÓ --- */
+.hero {
+  width: 100%;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  text-align: center;
+  padding: 80px 20px 0;
+}
+
+.hero-content {
+  max-width: 850px;
+  z-index: 2;
+  animation: fadeIn 1s ease-out;
+}
+
+.subtitle {
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: block;
+  color: var(--primary-light);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+.hero-content h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin-bottom: 25px;
+  line-height: 1.15;
+  text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+}
+
+.hero-content p {
+  font-size: 1.1rem;
+  margin-bottom: 45px;
+  font-weight: 400;
+  line-height: 1.6;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+}
+
+.cta-button {
+  display: inline-block;
+  text-decoration: none;
+  background-color: var(--primary);
+  color: var(--white);
+  padding: 16px 40px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px rgba(230, 126, 34, 0.4);
+}
+
+.cta-button:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(230, 126, 34, 0.5);
+}
+
+/* --- 2. RÓLAM SZEKCIÓ --- */
+.about-section {
+  padding: 100px 5%;
+  background-color: var(--white);
+  text-align: center;
+}
+
+.about-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.about-content h2 {
+  font-size: 2.5rem;
+  color: var(--text-main);
+}
+
+.about-content p {
+  color: var(--text-light);
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+/* --- 3. SZOLGÁLTATÁSOK --- */
+.services {
+  padding: 100px 5%;
+  text-align: center;
+  background: linear-gradient(180deg, var(--bg-color) 0%, #FFF5E6 100%);
+}
+
+.services h2 {
+  font-size: 2.5rem;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 35px;
+  max-width: 1200px;
+  margin: 60px auto 0;
+}
+
+.service-card {
+  background-color: var(--white);
+  padding: 45px 35px;
+  border-radius: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-align: left;
+  position: relative;
+  border: 1px solid rgba(230, 126, 34, 0.05);
+}
+
+.service-card:hover {
+  transform: translateY(-12px);
+  box-shadow: var(--shadow-lg);
+}
+
+.service-card.popular {
+  border: 2px solid var(--primary);
+}
+
+.badge {
+  position: absolute;
+  top: -16px;
+  right: 30px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: var(--white);
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 0 4px 10px rgba(230, 126, 34, 0.3);
+}
+
+.icon {
+  font-size: 3rem;
+  margin-bottom: 25px;
+}
+
+.service-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+.description {
+  color: var(--text-light);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 35px;
+  min-height: 70px;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #EDF2F7;
+  padding-top: 25px;
+}
+
+.duration {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* --- 4. RESZPONZÍV BEÁLLÍTÁSOK --- */
+@media (min-width: 768px) {
+  .hero-content h1 {
+    font-size: 3.8rem;
+  }
+  .hero-content p {
+    font-size: 1.25rem;
+  }
+  .services-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-content h1 {
+    font-size: 4.5rem;
+  }
+}

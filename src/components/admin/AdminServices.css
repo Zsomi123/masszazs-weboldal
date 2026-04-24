@@ -1,0 +1,130 @@
+/* --- ADMIN SZOLGÁLTATÁSOK --- */
+.services-title {
+  margin-top: 40px;
+  margin-bottom: 20px;
+  color: var(--text-main, #2c3e50);
+  border-top: 2px solid #ccc;
+  padding-top: 20px;
+  font-size: 1.5rem;
+}
+
+/* Űrlap */
+.services-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  background-color: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.service-input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.input-name { flex: 1 1 200px; }
+.input-duration { flex: 1 1 80px; }
+.input-price { flex: 1 1 100px; }
+
+.btn-add-service {
+  flex: 1 1 100%;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: opacity 0.2s;
+}
+
+.btn-add-service:hover {
+  opacity: 0.9;
+}
+
+/* Táblázat */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 20px;
+}
+
+.table-card {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  min-width: 600px;
+  overflow: hidden;
+}
+
+.services-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table-header-row {
+  background-color: #34495e;
+  color: white;
+}
+
+.services-table th {
+  padding: 15px;
+}
+
+.th-actions {
+  text-align: center;
+}
+
+.services-table tr {
+  border-bottom: 1px solid #eee;
+}
+
+.services-table td {
+  padding: 15px;
+}
+
+.td-name {
+  font-weight: bold;
+}
+
+.td-price {
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.td-actions {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+/* Szerkesztő mód beviteli mezői */
+.edit-input {
+  padding: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Gombok a táblázatban */
+.btn-table {
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-table:hover { opacity: 0.9; }
+
+.btn-edit { background-color: #f39c12; }
+.btn-delete { background-color: #e74c3c; }
+.btn-save { background-color: #2ecc71; }
+.btn-cancel { background-color: #95a5a6; }

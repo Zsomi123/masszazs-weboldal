@@ -1,0 +1,86 @@
+/* --- KAPCSOLAT ÉS LÁBLÉC --- */
+.contact {
+  background: linear-gradient(135deg, var(--text-main) 0%, #1A252F 100%);
+  color: var(--white);
+  padding: 100px 5% 30px;
+  border-top: 5px solid var(--primary);
+}
+
+.contact-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 50px;
+  max-width: 1200px;
+  margin: 0 auto 80px auto;
+}
+
+.contact-info, .opening-hours {
+  flex: 1;
+  min-width: 300px;
+}
+
+.contact-info h2 {
+  font-size: 2.5rem;
+  margin-bottom: 25px;
+}
+
+.contact-info p {
+  color: #CBD5E1;
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.info-items p {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  color: var(--white);
+}
+
+.info-items span {
+  font-size: 1.4rem;
+}
+
+.opening-hours {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.opening-hours h3 {
+  font-size: 1.8rem;
+  margin-bottom: 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 15px;
+}
+
+.opening-hours ul {
+  list-style: none;
+}
+
+.opening-hours li {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  color: #E2E8F0;
+  font-size: 1.1rem;
+}
+
+.opening-hours span {
+  color: var(--primary-light);
+  font-weight: 500;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 25px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94A3B8;
+  font-size: 0.95rem;
+}

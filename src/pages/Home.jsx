@@ -1,6 +1,9 @@
 import React from 'react';
 import '../App.css';
 import heroBg from '../assets/hero-bg.JPG'; 
+import './Home.css';     // A kezdőlap egyedi stílusa miatt
+
+// ... a többi kód változatlan
 
 // --- KOMPONENSEK IMPORTÁLÁSA ---
 // (Ellenőrizd, hogy a components mappában vannak-e. Ha ugyanott, akkor './Navbar' kell)

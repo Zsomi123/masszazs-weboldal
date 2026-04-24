@@ -1,0 +1,65 @@
+/* --- ADMIN FŐOLDAL --- */
+.admin-page-bg {
+  background-color: #f4f6f8;
+  min-height: 100vh;
+  padding-bottom: 50px;
+}
+
+.admin-navbar {
+  background-color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 5%;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Logó és Admin jelvény csoportja */
+.admin-logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-decoration: none;
+  margin-bottom: 10px;
+}
+
+.admin-badge {
+  background-color: #e74c3c;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 5px rgba(231, 76, 60, 0.3);
+}
+
+.btn-logout {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
+}
+
+.btn-logout:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+}
+
+.admin-container {
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 0 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}

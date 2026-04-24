@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 // ITT IMPORTÁLJUK AZ ÚJ KÉPET
 import logoImg from '../assets/osszerakva_es_massage.png'; 
+import './Navbar.css';
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
