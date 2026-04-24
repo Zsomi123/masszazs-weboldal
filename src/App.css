@@ -49,165 +49,216 @@ h1, h2, h3, .price {
   margin: 20px auto 50px auto;
 }
 
-/* --- 2. NAVIGÁCIÓ (Nyakpánt) --- */
+/* =========================================
+   NAVBAR ALAPOK ÉS LOGÓ
+   ========================================= */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 5%; /* Kisebb függőleges padding, hogy a logó domináljon */
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  position: fixed;
+  padding: 15px 5%;
+  background-color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  box-shadow: var(--shadow-sm);
   z-index: 1000;
-  min-height: 80px; /* Fix minimum magasság */
+  height: 80px; /* Fix magasság a stabilitásért */
 }
 
+/* LOGÓ KIEMELÉSE */
+/* LOGÓ KIEMELÉSE */
 .logo-link {
   display: flex;
   align-items: center;
-  gap: 12px; /* Ez a távolság a kép és a szöveg között */
-  z-index: 1001;
   text-decoration: none;
+  height: 100%;
 }
 
 .logo-img {
-  height: 60px; /* Állítsd be a neked tetsző méretre */
+  height: 65px; /* Jó nagy, majdnem kitölti a 80px magas navbart */
   width: auto;
+  object-fit: contain; /* Megtartja a képarányt, nem nyomja össze */
   transition: transform 0.3s ease;
+  display: block;
 }
 
 .logo-link:hover .logo-img {
-  transform: scale(1.05); /* Picit megnő a kép, ha az egész logóra viszed az egeret */
+  transform: scale(1.03); /* Egy nagyon finom, elegáns nagyítás rávitelkor */
 }
 
-/* Az új szöveg stílusa a kép mellett */
+/* (A .logo-text és .logo-highlight részeket nyugodtan kitörölheted innen, már nem kellenek) */
+
 .logo-text {
-  font-family: 'Nunito', sans-serif;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--text-main); /* Sötétszürke szín */
-  letter-spacing: -0.5px;
-}
-
-/* Kiemelheted a szöveget a narancs színnel is, ha ezt a sort használod:
-  color: var(--primary); 
-*/
-
-@media (min-width: 768px) {
-  .logo-img {
-    height: 80px; 
-  }
-  .logo-text {
-    font-size: 1.8rem; /* Nagyobb képernyőn picit nagyobb betű */
-  }
-}
-
-.logo-img:hover {
-  transform: scale(1.03);
-}
-
-/* Hamburger ikon stílusai */
-.hamburger {
-  display: none;
-  cursor: pointer;
-  flex-direction: column;
-  gap: 6px;
-  z-index: 1001;
-}
-
-.hamburger .bar {
-  width: 28px;
-  height: 3px;
-  background-color: var(--text-main);
-  border-radius: 3px;
-  transition: all 0.3s ease;
-}
-
-/* Gombok alapstílusa */
-.nav-btn {
-  text-decoration: none;
-  background-color: var(--primary);
-  color: var(--white);
-  padding: 12px 24px;
-  border-radius: 30px;
-  font-size: 0.95rem;
+  font-size: 1.5rem;
   font-weight: 600;
+  color: #2c3e50;
+  letter-spacing: 0.5px;
+}
+
+.logo-highlight {
+  color: #E67E22; /* Narancssárga kiemelés a névnek (Emi) */
+  font-weight: 800;
+}
+
+/* =========================================
+   ASZTALI MENÜPONTOK
+   ========================================= */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links li a {
+  text-decoration: none;
+  color: #34495e;
+  font-weight: 600;
+  font-size: 1.1rem;
+  position: relative;
+  transition: color 0.3s;
+}
+
+/* Szép aláhúzás effekt hover esetén */
+.nav-links li a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -5px;
+  left: 0;
+  background-color: #E67E22;
+  transition: width 0.3s ease;
+}
+
+.nav-links li a:hover {
+  color: #E67E22;
+}
+
+.nav-links li a:hover::after {
+  width: 100%;
+}
+
+/* GOMBOK (Közös stílus) */
+.nav-btn {
+  background-color: #E67E22;
+  color: white !important;
+  padding: 10px 24px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(230, 126, 34, 0.3);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(230, 126, 34, 0.2);
 }
 
 .nav-btn:hover {
-  background-color: var(--primary-dark);
+  background-color: #d67118;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 6px 15px rgba(230, 126, 34, 0.4);
 }
 
-.mobile-only {
-  display: none;
-}
+.mobile-only { display: none; }
+.desktop-only { display: inline-block; }
+.menu-overlay { display: none; }
+.hamburger { display: none; }
 
-/* Mobilos nézet beállításai */
-@media (max-width: 991px) {
+/* =========================================
+   MOBIL NÉZET (HAMBURGER MENÜ)
+   ========================================= */
+@media (max-width: 768px) {
+  .desktop-only { display: none; }
+  .mobile-only { display: block; margin-top: 20px; }
+  
+  /* Mobil logó reszponzív beállítása */
+  .logo-img { 
+    height: 48px; /* Mobilon kicsit kisebb, hogy ne legyen zsúfolt */
+    max-width: 65vw; /* BIZTONSÁGI FÉK: Nem engedi, hogy a logó rálógjon a hamburger menüre apró telefonokon! */
+    object-fit: contain;
+  }
+
+  /* HAMBURGER IKON ANIMÁCIÓ */
   .hamburger {
     display: flex;
-  }
-
-  .desktop-only {
-    display: none;
-  }
-
-  .mobile-only {
-    display: block;
-    margin-top: 20px;
-  }
-
-  .nav-links {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 75%;
-    max-width: 350px;
-    height: 100vh;
-    background-color: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
-    display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 35px;
-    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: -10px 0 30px rgba(0,0,0,0.1);
-    list-style: none;
+    gap: 6px;
+    cursor: pointer;
+    z-index: 1001; /* Hogy a menü felett maradjon */
   }
 
-  .nav-links.active {
-    right: 0; 
+  .hamburger .bar {
+    width: 30px;
+    height: 3px;
+    background-color: #2c3e50;
+    border-radius: 3px;
+    transition: all 0.3s ease-in-out;
   }
 
-  .nav-links a {
-    font-size: 1.3rem;
-    color: var(--text-main);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s;
-  }
-
-  .nav-links a:hover {
-    color: var(--primary);
-  }
-
+  /* Amikor aktív, átalakul "X"-szé! */
   .hamburger.active .bar:nth-child(1) {
     transform: translateY(9px) rotate(45deg);
+    background-color: #E67E22;
   }
   .hamburger.active .bar:nth-child(2) {
-    opacity: 0;
+    opacity: 0; /* Középső vonal eltűnik */
   }
   .hamburger.active .bar:nth-child(3) {
     transform: translateY(-9px) rotate(-45deg);
+    background-color: #E67E22;
+  }
+
+  /* MOBIL MENÜ BECSÚSZÁS (Jobbról balra) */
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -100%; /* Alapból kint van a képernyőből */
+    width: 280px;
+    height: 100vh;
+    background-color: white;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    transition: right 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Szép rugózó effekt */
+    z-index: 1000;
+  }
+
+  .nav-links.active {
+    right: 0; /* Becsúszik */
+  }
+
+  .nav-links li a {
+    font-size: 1.3rem;
+  }
+
+  .mobile-btn {
+    display: block;
+    text-align: center;
+    width: 100%;
+    padding: 15px 30px;
+  }
+
+  /* Sötétítő háttér (Amikor nyitva a menü, a weblap többi része elsötétül) */
+  .menu-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 999;
+  }
+
+  .menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
   }
 }
 
@@ -487,25 +538,6 @@ h1, h2, h3, .price {
 }
 
 @media (min-width: 768px) {
-  .logo-img {
-    height: 75px; /* Asztalon optimális méret egy letisztult menühöz */
-  }
-  .nav-links {
-    display: flex;
-    align-items: center; /* Függőlegesen középre igazítja a linkeket */
-    gap: 35px;
-    list-style: none;
-  }
-  .nav-links a {
-    text-decoration: none;
-    color: var(--text-main);
-    font-weight: 500;
-    font-size: 1rem;
-    transition: color 0.3s ease;
-  }
-  .nav-links a:hover {
-    color: var(--primary);
-  }
   .hero-content h1 {
     font-size: 3.8rem;
   }

@@ -1,57 +1,19 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
 import '../App.css';
 import heroBg from '../assets/hero-bg.JPG'; 
-import logoImg from '../assets/Logo.png'; // <-- Ezt a sort add hozzá!
+
+// --- KOMPONENSEK IMPORTÁLÁSA ---
+// (Ellenőrizd, hogy a components mappában vannak-e. Ha ugyanott, akkor './Navbar' kell)
+import Navbar from '../components/Navbar'; 
+import Footer from '../components/Footer';
 
 function Home() {
-  // Ez a változó figyeli, hogy nyitva van-e a menü mobilon
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  // Ez a függvény nyitja/zárja a menüt
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  // Ez a függvény bezárja a menüt, ha rákattintanak egy linkre
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-  };
-
   return (
     <>
-      {/* Navigációs menü */}
-      <nav className="navbar">
-        {/* A logónál is érdemes Linket használni, hogy a főoldalon maradjon */}
-        <Link to="/" className="logo-link" onClick={closeMenu}>
-          <img src={logoImg} alt="Emi Logo" className="logo-img" />
-          <span className="logo-text">Massage</span>
-        </Link>
-        
-        <div className={`hamburger ${isMenuOpen ? 'active' : ''}`} onClick={toggleMenu}>
-          <span className="bar"></span>
-          <span className="bar"></span>
-          <span className="bar"></span>
-        </div>
+      {/* ÚJ: A gyönyörű, okos navigációs sáv betöltése */}
+      <Navbar />
 
-        <ul className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
-          {/* A sima menüpontok maradhatnak <a> tagek, mert egy oldalon belül görgetnek! */}
-          <li><a href="#kezdolap" onClick={closeMenu}>Kezdőlap</a></li>
-          <li><a href="#rolam" onClick={closeMenu}>Rólam</a></li>
-          <li><a href="#szolgaltatasok" onClick={closeMenu}>Szolgáltatások</a></li>
-          <li><a href="#kapcsolat" onClick={closeMenu}>Kapcsolat</a></li>
-          
-          {/* 1. GOMB (Mobilos menüben) - ÁTÍRVA LINKRE */}
-          <li className="mobile-only">
-            <Link to="/foglalas" className="nav-btn" onClick={closeMenu}>Időpontot kérek</Link>
-          </li>
-        </ul>
-        
-        {/* 2. GOMB (Asztali nézetben) - ÁTÍRVA LINKRE */}
-        <Link to="/foglalas" className="nav-btn desktop-only">Időpontot kérek</Link>
-      </nav>
-
-      {/* Hero szekció - (Innen lefelé minden maradt a régi!) */}
+      {/* Hero szekció */}
       <header id="kezdolap" className="hero" style={{ 
         backgroundImage: `linear-gradient(rgba(45, 55, 72, 0.6), rgba(45, 55, 72, 0.4)), url(${heroBg})` 
       }}>
@@ -113,31 +75,24 @@ function Home() {
         </div>
       </section>
 
-      {/* Kapcsolat szekció */}
-      <footer id="kapcsolat" className="contact">
-        <div className="contact-container">
-          <div className="contact-info">
-            <h2>Foglalj időpontot!</h2>
-            <p>Várlak szeretettel szalonomban. Keress bizalommal az alábbi elérhetőségeken!</p>
-            <div className="info-items">
-              <p><span>📍</span> 1111 Budapest, Példa utca 1.</p>
-              <p><span>📞</span> +36 30 123 4567</p>
-              <p><span>✉️</span> info@emimassage.hu</p>
-            </div>
-          </div>
-          <div className="opening-hours">
-            <h3>Nyitvatartás</h3>
-            <ul>
-              <li><span>Hétfő - Péntek:</span> 08:00 - 18:00</li>
-              <li><span>Szombat:</span> 09:00 - 14:00</li>
-              <li><span>Vasárnap:</span> Zárva</li>
-            </ul>
-          </div>
+      {/* ÚJ: Galéria szekció */}
+      <section id="galeria" style={{ padding: '100px 5%', textAlign: 'center', backgroundColor: '#fff' }}>
+        <h2>Galéria</h2>
+        <div className="divider center"></div>
+        <p style={{ color: '#7f8c8d', marginBottom: '40px', fontSize: '1.1rem' }}>
+          Tekints be a szalon nyugtató és harmonikus környezetébe.
+        </p>
+        
+        {/* Ideiglenes képtartók - Ide jönnek majd a valódi fotóid */}
+        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ width: '300px', height: '250px', backgroundColor: '#f4f6f8', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bdc3c7', fontWeight: 'bold' }}>Kép 1 helye</div>
+          <div style={{ width: '300px', height: '250px', backgroundColor: '#f4f6f8', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bdc3c7', fontWeight: 'bold' }}>Kép 2 helye</div>
+          <div style={{ width: '300px', height: '250px', backgroundColor: '#f4f6f8', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bdc3c7', fontWeight: 'bold' }}>Kép 3 helye</div>
         </div>
-        <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Emi Massage. Minden jog fenntartva.</p>
-        </div>
-      </footer>
+      </section>
+
+      {/* ÚJ: Az egységesített lábléc betöltése */}
+      <Footer />
     </>
   );
 }
