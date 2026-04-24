@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Calendar from 'react-calendar'; 
 import 'react-calendar/dist/Calendar.css'; 
 import { format, isBefore, addMinutes } from 'date-fns';
 import '../App.css';
-import Navbar from '../components/Navbar'; // <-- ÚJ: Beimportáltuk a Navbar komponenst!
+import logoImg from '../assets/logo.png';
 
 function Booking() {
   const [services, setServices] = useState([]);
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', serviceId: '' });
+const [formData, setFormData] = useState({ name: '', email: '', phone: '', serviceId: '' });
   const [message, setMessage] = useState('');
   
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [bookedSlots, setBookedSlots] = useState([]);
   const [selectedTime, setSelectedTime] = useState(null);
 
-  // Kiszámoljuk a "holnapután" dátumát (Objektumként, ahogy a react-calendar szereti)
+  // Kiszámoljuk a "holnapután" dátumát a naptár korlátozásához
+// Kiszámoljuk a "holnapután" dátumát (Objektumként, ahogy a react-calendar szereti)
   const today = new Date();
   const minAllowedDateObj = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2);
 
@@ -108,11 +110,12 @@ function Booking() {
     .then(res => res.json())
     .then(data => {
         if (data.success || data.message === "Sikeres foglalás!") {
-          setMessage('🎉 Sikeres foglalás! Hamarosan várunk.');
-          setFormData({ name: '', email: '', phone: '', serviceId: '' }); 
-          setSelectedTime(null);
-          setSelectedDate(new Date(selectedDate)); 
-        } else {
+    setMessage('🎉 Sikeres foglalás! Hamarosan várunk.');
+    // ITT A JAVÍTÁS: add hozzá az email: ''-t is!
+    setFormData({ name: '', email: '', phone: '', serviceId: '' }); 
+    setSelectedTime(null);
+    setSelectedDate(new Date(selectedDate)); 
+}else {
             setMessage(`❌ ${data.message}`);
         }
     })
@@ -124,9 +127,13 @@ function Booking() {
 
   return (
     <div className="booking-page" style={{ backgroundColor: '#f4f6f8', minHeight: '100vh', paddingBottom: '50px' }}>
-      
-      {/* <-- ÚJ: A csodaszép, egységes Navbar megjelenítése --> */}
-      <Navbar />
+      <nav className="navbar" style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', backgroundColor: 'white', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+        <Link to="/" className="logo-link" style={{ textDecoration: 'none', color: '#2c3e50', display: 'flex', alignItems: 'center' }}>
+          <img src={logoImg} alt="Emi Logo" className="logo-img" style={{ height: '40px', marginRight: '10px' }} />
+          <span className="logo-text" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Massage</span>
+        </Link>
+        <Link to="/" className="nav-btn" style={{ textDecoration: 'none', backgroundColor: '#34495e', color: 'white', padding: '8px 15px', borderRadius: '5px', fontSize: '0.9rem' }}>Vissza a főoldalra</Link>
+      </nav>
 
       <div style={{ maxWidth: '1100px', margin: '30px auto', padding: '0 20px' }}>
         <h1 style={{ textAlign: 'center', color: '#2c3e50', marginBottom: '40px' }}>Időpontfoglalás</h1>
@@ -200,11 +207,11 @@ function Booking() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
                 <div style={{ flex: '0 0 auto' }}>
                   <Calendar 
-                    onChange={setSelectedDate}
-                    value={selectedDate} 
-                    minDate={minAllowedDateObj} 
-                    tileDisabled={({ date }) => date.getDay() === 0 || date.getDay() === 6}
-                  />
+  onChange={setSelectedDate}
+  value={selectedDate} 
+  minDate={minAllowedDateObj} /* <-- ITT ADJUK ÁT AZ ÚJ, HOLNAPUTÁNI DÁTUMOT */
+  tileDisabled={({ date }) => date.getDay() === 0 || date.getDay() === 6}
+/>
                 </div>
                 <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
                   <h4 style={{ margin: '0 0 15px 0', color: '#7f8c8d' }}>Szabad sávok: {format(selectedDate, 'yyyy. MM. dd.')}</h4>
@@ -241,3 +248,4 @@ function Booking() {
 }
 
 export default Booking;
+
