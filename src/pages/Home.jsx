@@ -1,19 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import '../App.css';
 import heroBg from '../assets/hero-bg.JPG'; 
-import './Home.css';     // A kezdőlap egyedi stílusa miatt
+import './Home.css';     
 
-// ... a többi kód változatlan
-
-// --- KOMPONENSEK IMPORTÁLÁSA ---
-// (Ellenőrizd, hogy a components mappában vannak-e. Ha ugyanott, akkor './Navbar' kell)
 import Navbar from '../components/Navbar'; 
 import Footer from '../components/Footer';
+import { Link } from 'react-router-dom'; // Ezt add hozzá, ha nincs ott
 
 function Home() {
+  // --- ÚJ RÉSZ: Szolgáltatások letöltése ---
+  const [services, setServices] = useState([]);
+
+  useEffect(() => {
+    // Ugyanaz a végpont, amit a foglalási oldalon is használunk
+    fetch('http://localhost:5001/api/services')
+      .then(res => res.json())
+      .then(data => setServices(data))
+      .catch(err => console.error("Hiba a szolgáltatások letöltésekor:", err));
+  }, []);
+
+  // Egy kis tömb ikonokkal, amiket sorban kiosztunk a kártyáknak
+  const icons = ['🌿', '👣', '✨', '💆‍♀️', '🌸', '🧘‍♀️'];
+
   return (
     <>
-      {/* ÚJ: A gyönyörű, okos navigációs sáv betöltése */}
       <Navbar />
 
       {/* Hero szekció */}
@@ -38,47 +48,40 @@ function Home() {
         </div>
       </section>
 
-      {/* Szolgáltatások szekció */}
+      {/* Szolgáltatások szekció (DINAMIKUS) */}
       <section id="szolgaltatasok" className="services">
         <h2>Szolgáltatások és Árak</h2>
         <div className="divider center"></div>
         <div className="services-grid">
           
-          <div className="service-card popular">
-            <div className="badge">Legnépszerűbb</div>
-            <div className="icon">🌿</div>
-            <h3>Svédmasszázs</h3>
-            <p className="description">Klasszikus, teljes testet átmozgató frissítő masszázs, amely oldja az izomfeszültséget.</p>
-            <div className="card-footer">
-              <span className="duration">60 perc</span>
-              <span className="price">12.000 Ft</span>
-            </div>
-          </div>
+          {/* Ha még töltenek az adatok */}
+          {services.length === 0 && <p style={{ gridColumn: '1 / -1', color: '#7f8c8d' }}>Szolgáltatások betöltése...</p>}
 
-          <div className="service-card">
-            <div className="icon">👣</div>
-            <h3>Talpmasszázs</h3>
-            <p className="description">A reflexzónák stimulálásával beindítja a szervezet öngyógyító folyamatait.</p>
-            <div className="card-footer">
-              <span className="duration">30 perc</span>
-              <span className="price">8.000 Ft</span>
-            </div>
-          </div>
+          {services.map((service, index) => (
+  <div key={service.id} className={`service-card ${index === 0 ? 'popular' : ''}`}>
+    {index === 0 && <div className="badge">Legnépszerűbb</div>}
+    <div className="icon">{icons[index % icons.length]}</div>
+    <h3>{service.name}</h3>
+    <p className="description">
+      Felfrissülés és relaxáció a testnek és a léleknek. Egyedi igényeidre szabott kezelés.
+    </p>
+    
+    <div className="card-footer">
+      <span className="duration">{service.duration} perc</span>
+      <span className="price">{service.price} Ft</span>
+    </div>
 
-          <div className="service-card">
-            <div className="icon">✨</div>
-            <h3>Hátmasszázs</h3>
-            <p className="description">Célzott kezelés a nyak, a váll és a hátizmok fájdalmainak enyhítésére.</p>
-            <div className="card-footer">
-              <span className="duration">45 perc</span>
-              <span className="price">10.000 Ft</span>
-            </div>
-          </div>
+    {/* ÚJ: Foglalás gomb minden kártyához */}
+    <Link to={`/foglalas?serviceId=${service.id}`} className="service-btn">
+  Időpontot kérek
+</Link>
+  </div>
+))}
 
         </div>
       </section>
 
-      {/* ÚJ: Galéria szekció */}
+      {/* Galéria szekció */}
       <section id="galeria" style={{ padding: '100px 5%', textAlign: 'center', backgroundColor: '#fff' }}>
         <h2>Galéria</h2>
         <div className="divider center"></div>
@@ -86,7 +89,6 @@ function Home() {
           Tekints be a szalon nyugtató és harmonikus környezetébe.
         </p>
         
-        {/* Ideiglenes képtartók - Ide jönnek majd a valódi fotóid */}
         <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <div style={{ width: '300px', height: '250px', backgroundColor: '#f4f6f8', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bdc3c7', fontWeight: 'bold' }}>Kép 1 helye</div>
           <div style={{ width: '300px', height: '250px', backgroundColor: '#f4f6f8', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bdc3c7', fontWeight: 'bold' }}>Kép 2 helye</div>
@@ -94,7 +96,6 @@ function Home() {
         </div>
       </section>
 
-      {/* ÚJ: Az egységesített lábléc betöltése */}
       <Footer />
     </>
   );

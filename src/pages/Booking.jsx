@@ -5,10 +5,21 @@ import { format, isBefore, addMinutes } from 'date-fns';
 import '../App.css';
 import './Booking.css'; // <-- AZ ÚJ CSS IMPORTÁLÁSA
 import Navbar from '../components/Navbar';
+import { useSearchParams } from 'react-router-dom';
 
 function Booking() {
   const [services, setServices] = useState([]);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', serviceId: '' });
+  const [searchParams] = useSearchParams();
+  const preSelectedId = searchParams.get('serviceId'); // Kiolvassuk a "serviceId" értéket
+
+  // Figyeljük, ha van előre kiválasztott ID az URL-ben
+  useEffect(() => {
+    if (preSelectedId) {
+      // Beállítjuk a formban a szolgáltatást (számmá alakítva)
+      setFormData(prev => ({ ...prev, serviceId: parseInt(preSelectedId) }));
+    }
+  }, [preSelectedId]);
   const [message, setMessage] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [bookedSlots, setBookedSlots] = useState([]);

@@ -174,6 +174,32 @@
   font-weight: 500;
 }
 
+/* --- ÚJ: SZOLGÁLTATÁS FOGLALÁS GOMB --- */
+.service-btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  background-color: var(--primary);
+  color: white;
+  padding: 12px;
+  margin-top: 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(230, 126, 34, 0.1);
+}
+
+.service-btn:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(230, 126, 34, 0.2);
+}
+
+/* Ha a kártya népszerű (popular), a gomb is lehet hangsúlyosabb */
+.service-card.popular .service-btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+}
+
 /* --- 4. RESZPONZÍV BEÁLLÍTÁSOK --- */
 @media (min-width: 768px) {
   .hero-content h1 {
